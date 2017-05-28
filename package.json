@@ -1,0 +1,23 @@
+{
+  "name": "complate-stream",
+  "version": "0.9.0",
+  "description": "complate's core library for server-side rendering via JSX",
+  "author": "FND",
+  "license": " Apache-2.0",
+  "homepage": "https://github.com/complate/complate-stream",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/complate/complate-stream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/complate/complate-stream/issues"
+  },
+  "module": "src/index.js",
+  "scripts": {
+    "test": "eslint --cache *.js src && echo ✓"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-config-fnd": "^1.1.1"
+  }
+}
