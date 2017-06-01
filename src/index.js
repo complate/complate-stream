@@ -1,5 +1,5 @@
-import documentRenderer, { registerElement, createElement } from "./renderer";
+import documentRenderer, { registerMacro, createElement } from "./renderer";
 import generateHTML from "./html";
 
 export default documentRenderer;
-export { registerElement, createElement, generateHTML };
+export { registerMacro, createElement, generateHTML };

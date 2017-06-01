@@ -1,6 +1,6 @@
 import generateHTML from "./html";
 
-const CUSTOM_ELEMENTS = {};
+const TAG_MACROS = {};
 
 export default function documentRenderer(doctype = "<!DOCTYPE html>") {
 	return (stream, element, params) => {
@@ -9,32 +9,15 @@ export default function documentRenderer(doctype = "<!DOCTYPE html>") {
 	};
 }
 
-export function registerElement(tag, fn) {
-	if(tag.indexOf("-") === -1) {
-		raise(tag, "must contain a hyphen");
+export function registerMacro(tag, fn) { // TODO: rename?
+	if(TAG_MACROS[tag]) {
+		throw new Error(`invalid tag macro: <${tag}> already registered`);
 	}
 
-	if(CUSTOM_ELEMENTS[tag]) {
-		raise(tag, "already registered");
-	}
-
-	CUSTOM_ELEMENTS[tag] = fn;
+	TAG_MACROS[tag] = fn;
 }
 
 export function createElement(tag, params, ...children) {
-	if(tag.indexOf("-") === -1) { // regular element
-		return generateHTML(tag, params, ...children);
-	}
-
-	// custom element
-	let fn = CUSTOM_ELEMENTS[tag];
-	if(!fn) {
-		raise(tag);
-	}
-	return fn(params, ...children);
-}
-
-function raise(tag, msg) {
-	let err = `invalid custom element: <${tag}>`;
-	throw new Error(msg ? `${err} ${msg}` : err);
+	let macro = TAG_MACROS[tag];
+	return macro ? macro(params, ...children) : generateHTML(tag, params, ...children);
 }
