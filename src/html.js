@@ -43,6 +43,10 @@ function generateAttributes(params) {
 	return " " + Object.keys(params).map(name => {
 		let value = params[name];
 		switch(value) {
+		// blank attributes
+		case null:
+		case undefined:
+			return;
 		// boolean attributes (e.g. `<input … autofocus>`)
 		case true:
 			return name;
