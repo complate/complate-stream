@@ -40,7 +40,7 @@ function generateAttributes(params) {
 		return "";
 	}
 
-	return " " + Object.keys(params).map(name => {
+	let attribs = Object.keys(params).map(name => {
 		let value = params[name];
 		switch(value) {
 		// blank attributes
@@ -67,7 +67,8 @@ function generateAttributes(params) {
 
 			return `${name}="${htmlEncode(value, true)}"`;
 		}
-	}).join(" ");
+	}).join(" ").trim(); // XXX: assumes blank attributes only occur at the edges
+	return attribs.length === 0 ? "" : ` ${attribs}`;
 }
 
 // adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
@@ -76,9 +77,8 @@ function htmlEncode(str, attribute) {
 		replace(/</g, "&lt;").
 		replace(/>/g, "&gt;");
 	if(attribute) {
-		return res.replace(/"/g, "&quot;").
+		res = res.replace(/"/g, "&quot;").
 			replace(/'/g, "&#x27;");
-	} else {
-		return res;
 	}
+	return res;
 }
