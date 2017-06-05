@@ -64,17 +64,21 @@ function generateAttributes(params) {
 			if(/ |"|'|>|'|\/|=/.test(name)) {
 				throw new Error(`invalid attribute name: \`${JSON.stringify(name)}\``);
 			}
-			value = value.replace(/&/g, "&amp;").replace(/"/g, "&quot;");
 
-			return `${name}="${value}"`;
+			return `${name}="${htmlEncode(value, true)}"`;
 		}
 	}).join(" ");
 }
 
-// adapted from TiddlyWiki <http://tiddlywiki.com>
-function htmlEncode(str) { // XXX: insufficient?
-	return str.replace(/&/g, "&amp;").
+// adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
+function htmlEncode(str, attribute) {
+	let res = str.replace(/&/g, "&amp;").
 		replace(/</g, "&lt;").
-		replace(/>/g, "&gt;").
-		replace(/"/g, "&quot;");
+		replace(/>/g, "&gt;");
+	if(attribute) {
+		return res.replace(/"/g, "&quot;").
+			replace(/'/g, "&#x27;");
+	} else {
+		return res;
+	}
 }
