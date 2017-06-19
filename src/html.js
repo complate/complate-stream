@@ -9,6 +9,10 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
+export function HTMLString(str) {
+	this.value = str;
+}
+
 export default function generateHTML(tag, params, ...children) {
 	return stream => {
 		stream.write(`<${tag}${generateAttributes(params)}>`);
@@ -21,6 +25,8 @@ export default function generateHTML(tag, params, ...children) {
 		flatCompact(children).forEach(child => {
 			if(child.call) {
 				child(stream);
+			} else if(child instanceof HTMLString) {
+				stream.write(child.value);
 			} else {
 				let txt = htmlEncode(child.toString());
 				stream.write(txt);
