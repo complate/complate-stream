@@ -1,6 +1,7 @@
 /* global describe, it */
 require("./es6_module_syntax");
 let renderer = require("../src/renderer");
+let HTMLString = require("../src/html").HTMLString;
 let uid = require("./helpers").uid;
 let assert = require("assert");
 
@@ -50,6 +51,11 @@ describe("renderer", _ => {
 		assert(html.includes("<p>lorem &lt;em&gt;ipsum&lt;/em&gt; …</p>"));
 	});
 
+	it("should allow for raw HTML, cicrumventing content encoding", () => {
+		let html = renderHTML("p", null, new HTMLString("foo <i>bar</i> baz"));
+		assert(html.includes("<p>foo <i>bar</i> baz</p>"));
+	});
+
 	it("should convert parameters to suitable attributes", () => {
 		let html = renderHTML("input", {
 			type: "text",
@@ -72,7 +78,7 @@ function renderHTML(tag, params, children) {
 	let render = renderer();
 	let stream = new WritableStream();
 
-	if(children) { // need to generate a container
+	if(children) { // need to generate root-container macro
 		let container = `dummy-${uid()}`;
 		registerMacro(container, _ => h(tag, params, children));
 		render(stream, container);

@@ -9,10 +9,6 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
-export function HTMLString(str) {
-	this.value = str;
-}
-
 export default function generateHTML(tag, params, ...children) {
 	return stream => {
 		stream.write(`<${tag}${generateAttributes(params)}>`);
@@ -41,6 +37,10 @@ export default function generateHTML(tag, params, ...children) {
 	};
 }
 
+export function HTMLString(str) {
+	this.value = str;
+}
+
 function generateAttributes(params) {
 	if(!params) {
 		return "";
@@ -56,6 +56,7 @@ function generateAttributes(params) {
 		// boolean attributes (e.g. `<input … autofocus>`)
 		case true:
 			memo.push(name);
+			break;
 		case false:
 			break;
 		// regular attributes
