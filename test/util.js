@@ -9,9 +9,9 @@ describe("flatCompact", _ => {
 				util.flatCompact([1, [2, [3, 4], 5], 6]));
 	});
 
-	it("should discard blank values (i.e. `undefined` and `null`)", () => {
+	it("should discard blank values (i.e. `undefined`, `null` and `false`)", () => {
 		assert.deepStrictEqual(["foo", "bar", 0, "baz", ""],
-				util.flatCompact([[null, "foo"], ["bar", 0],
+				util.flatCompact([[null, "foo"], ["bar", 0, false],
 						["baz", undefined, ""]]));
 	});
 });

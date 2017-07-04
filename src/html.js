@@ -19,7 +19,7 @@ export default function generateHTML(tag, params, ...children) {
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
-		//   `null`/`undefined` is much simpler)
+		//   `null`/`undefined`/`false` is much simpler)
 		// * `children` might contain nested arrays due to the use of
 		//   collections within JSX (`{items.map(item => <span>item</span>)}`)
 		flatCompact(children).forEach(child => {

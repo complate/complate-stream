@@ -63,8 +63,8 @@ describe("renderer", _ => {
 	});
 
 	it("should ignore blank values for child elements", () => {
-		let html = renderHTML("p", null, [null, "hello world", undefined]);
-		assert.equal("<!DOCTYPE html>\n<p>hello world</p>", html);
+		let html = renderHTML("p", null, [null, "hello", undefined, "world", false]);
+		assert.equal("<!DOCTYPE html>\n<p>helloworld</p>", html);
 	});
 });
 
