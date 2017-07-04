@@ -46,18 +46,18 @@ function generateAttributes(params) {
 		return "";
 	}
 
-	let attribs = Object.keys(params).map(name => {
+	let attribs = Object.keys(params).reduce((memo, name) => {
 		let value = params[name];
 		switch(value) {
 		// blank attributes
 		case null:
 		case undefined:
-			return;
+			break;
 		// boolean attributes (e.g. `<input … autofocus>`)
 		case true:
-			return name;
+			memo.push(name);
 		case false:
-			return;
+			break;
 		// regular attributes
 		default:
 			if(typeof value === "number") {
@@ -71,10 +71,11 @@ function generateAttributes(params) {
 				throw new Error(`invalid attribute name: \`${JSON.stringify(name)}\``);
 			}
 
-			return `${name}="${htmlEncode(value, true)}"`;
+			memo.push(`${name}="${htmlEncode(value, true)}"`);
 		}
-	}).join(" ").trim(); // XXX: assumes blank attributes only occur at the edges
-	return attribs.length === 0 ? "" : ` ${attribs}`;
+		return memo;
+	}, []);
+	return attribs.length === 0 ? "" : ` ${attribs.join(" ")}`;
 }
 
 // adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module

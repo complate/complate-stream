@@ -59,7 +59,7 @@ describe("renderer", _ => {
 			autofocus: true,
 			disabled: false
 		});
-		assert.equal('<!DOCTYPE html>\n<input type="text" id="123"   autofocus>', html);
+		assert.equal('<!DOCTYPE html>\n<input type="text" id="123" autofocus>', html);
 	});
 
 	it("should ignore blank values for child elements", () => {
