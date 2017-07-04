@@ -15,7 +15,7 @@
   "module": "src/index.js",
   "scripts": {
     "start": "npm-run-all --parallel lint test",
-    "test": "mocha",
+    "test": "mocha test/test_*.js",
     "lint": "eslint --cache *.js src test && echo ✓"
   },
   "dependencies": {},

@@ -1,8 +1,9 @@
 /* global describe, it */
 require("./es6_module_syntax");
+require("./macros");
+let uid = require("./util").uid;
 let renderer = require("../src/renderer");
 let HTMLString = require("../src/html").HTMLString;
-let uid = require("./helpers").uid;
 let assert = require("assert");
 
 let { registerMacro, createElement: h } = renderer;

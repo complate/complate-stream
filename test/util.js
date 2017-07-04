@@ -1,17 +1,13 @@
-/* global describe, it */
-require("./es6_module_syntax");
-let util = require("../src/util");
-let assert = require("assert");
+let crypto = require("crypto");
 
-describe("flatCompact", _ => {
-	it("should flatten nested arrays", () => {
-		assert.deepStrictEqual([1, 2, 3, 4, 5, 6],
-				util.flatCompact([1, [2, [3, 4], 5], 6]));
-	});
+// generates pseudo-unique IDs
+exports.uid = _ => {
+	let id = new Date() * Math.random();
+	return generateHash(`${id}`);
+};
 
-	it("should discard blank values (i.e. `undefined`, `null` and `false`)", () => {
-		assert.deepStrictEqual(["foo", "bar", 0, "baz", ""],
-				util.flatCompact([[null, "foo"], ["bar", 0, false],
-						["baz", undefined, ""]]));
-	});
-});
+function generateHash(str) {
+	let hash = crypto.createHash("md5");
+	hash.update(str);
+	return hash.digest("hex");
+};
