@@ -14,10 +14,16 @@
   },
   "module": "src/index.js",
   "scripts": {
-    "test": "eslint --cache *.js src && echo ✓"
+    "start": "npm-run-all --parallel lint test",
+    "test": "mocha",
+    "lint": "eslint --cache *.js src test && echo ✓"
   },
+  "dependencies": {},
   "devDependencies": {
     "eslint": "^3.19.0",
-    "eslint-config-fnd": "^1.1.1"
+    "eslint-config-fnd": "^1.1.1",
+    "mocha": "^3.4.2",
+    "node-hook": "^0.6.1",
+    "npm-run-all": "^4.0.2"
   }
 }
