@@ -1,4 +1,5 @@
 import generateHTML from "./html";
+import { flatCompact } from "./util";
 
 const TAG_MACROS = {};
 
@@ -19,5 +20,6 @@ export function registerMacro(tag, fn) { // TODO: rename?
 
 export function createElement(tag, params, ...children) {
 	let macro = TAG_MACROS[tag];
-	return macro ? macro(params, ...children) : generateHTML(tag, params, ...children);
+	return macro ? macro(params, ...flatCompact(children)) :
+			generateHTML(tag, params, ...children);
 }
