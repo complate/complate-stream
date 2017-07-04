@@ -66,6 +66,11 @@ describe("renderer", _ => {
 			disabled: false
 		});
 		assert.equal('<!DOCTYPE html>\n<input type="text" id="123" autofocus>', html);
+
+		[{}, [], new Date(), /.*/].forEach(obj => {
+			let fn = _ => renderHTML("div", { title: obj });
+			assert.throws(fn, /invalid attribute/);
+		});
 	});
 
 	it("should ignore blank values for child elements", () => {
