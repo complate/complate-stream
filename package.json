@@ -1,29 +1,29 @@
 {
-  "name": "complate-stream",
-  "version": "0.9.6",
-  "description": "complate's core library for server-side rendering via JSX",
-  "author": "FND",
-  "license": " Apache-2.0",
-  "homepage": "https://github.com/complate/complate-stream",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/complate/complate-stream.git"
-  },
-  "bugs": {
-    "url": "https://github.com/complate/complate-stream/issues"
-  },
-  "module": "src/index.js",
-  "scripts": {
-    "start": "npm-run-all --parallel lint test",
-    "test": "mocha test/test_*.js",
-    "lint": "eslint --cache *.js src test && echo ✓"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "eslint": "^3.19.0",
-    "eslint-config-fnd": "^1.1.1",
-    "mocha": "^3.4.2",
-    "node-hook": "^0.6.1",
-    "npm-run-all": "^4.0.2"
-  }
+	"name": "complate-stream",
+	"version": "0.9.6",
+	"description": "complate's core library for server-side rendering via JSX",
+	"author": "FND",
+	"license": " Apache-2.0",
+	"homepage": "https://github.com/complate/complate-stream",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/complate/complate-stream.git"
+	},
+	"bugs": {
+		"url": "https://github.com/complate/complate-stream/issues"
+	},
+	"module": "src/index.js",
+	"scripts": {
+		"start": "npm-run-all --parallel lint test",
+		"test": "mocha test/test_*.js",
+		"lint": "eslint --cache *.js src test && echo ✓"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"eslint": "^3.19.0",
+		"eslint-config-fnd": "^1.1.1",
+		"mocha": "^3.4.2",
+		"node-hook": "^0.6.1",
+		"npm-run-all": "^4.0.2"
+	}
 }
