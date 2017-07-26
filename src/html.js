@@ -9,6 +9,19 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
+// This function is basically called by `createElement` (with the same
+// parameters). The indirection is a simple abstaction to
+// encapsulate the macro functionality and not to mess this function
+// up even more.
+// The return value is a function again which is used to
+// build up a promise chain (taking a promise and returning a
+// promise based upon the input promise).
+// Why don't we build up the promise chain directly? The reason
+// is that we don't have the possibility to put a promise object
+// into generateHTML's parameter list since the method is called
+// without any context by createElement (wich doesn't have any context
+// too). So the returned "middle" function is only used to pass in the
+// promise.
 export default function generateHTML(tag, params, ...children) {
 	let fn = streamPromise => {
 		streamPromise = streamPromise.then(stream => {
