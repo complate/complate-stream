@@ -1,5 +1,9 @@
 let { registerMacro, createElement: h } = require("../src/renderer");
 
+registerMacro("simple", ({ title }, ...children) => {
+	return h("div", { title }, children);
+});
+
 registerMacro("site-index", ({ title }) => {
 	return h("default-layout", { title },
 			h("h1", null, title),

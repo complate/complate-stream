@@ -10,8 +10,11 @@ const VOID_ELEMENTS = {}; // poor man's set
 });
 
 export default function generateHTML(tag, params, ...children) {
-	return stream => {
-		stream.write(`<${tag}${generateAttributes(params)}>`);
+	let fn = streamPromise => {
+		streamPromise = streamPromise.then(stream => {
+			stream.write(`<${tag}${generateAttributes(params)}>`);
+			return stream;
+		});
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -19,22 +22,49 @@ export default function generateHTML(tag, params, ...children) {
 		// * `children` might contain nested arrays due to the use of
 		//   collections within JSX (`{items.map(item => <span>item</span>)}`)
 		flatCompact(children).forEach(child => {
-			if(child.call) {
-				child(stream);
+			if(child.isHTMLGenerator) {
+				streamPromise = child(streamPromise);
+			} else if(child.then) { // Some Promise returning a isHTMLGenerator
+				streamPromise = streamPromise.then(stream => {
+					return child.then(elements => {
+						if(!elements.isHTMLGenerator) {
+							throw new Error("Expecting promise to return a HTML generator function");
+						}
+						return elements(Promise.resolve(stream));
+					});
+				});
+			} else if(child.call) { // Some function returning a isHTMLGenerator
+				let elements = child();
+				if(!elements.isHTMLGenerator) {
+					throw new Error("Expecting function to return a HTML generator function");
+				}
+				streamPromise = elements(streamPromise);
 			} else if(child instanceof HTMLString) {
-				stream.write(child.value);
+				streamPromise = streamPromise.then(stream => {
+					stream.write(child.value);
+					return stream;
+				});
 			} else {
 				let txt = htmlEncode(child.toString());
-				stream.write(txt);
+				streamPromise = streamPromise.then(stream => {
+					stream.write(txt);
+					return stream;
+				});
 			}
 		});
 
-		// void elements must not have closing tags
-		if(!VOID_ELEMENTS[tag]) {
-			stream.write(`</${tag}>`);
-		}
-		stream.flush();
+		return streamPromise.then(stream => {
+			// void elements must not have closing tags
+			if(!VOID_ELEMENTS[tag]) {
+				stream.write(`</${tag}>`);
+			}
+			stream.flush();
+			return stream;
+		});
 	};
+
+	fn.isHTMLGenerator = true; // Tag this function to distinguish it from other functions supplied by the user
+	return fn;
 }
 
 export function HTMLString(str) {

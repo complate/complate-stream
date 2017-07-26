@@ -13,70 +13,113 @@ describe("renderer", _ => {
 		// defaults to HTML5
 		let render = renderer();
 		let stream = new WritableStream();
-		render(stream, "html");
-		let expected = "<!DOCTYPE html>\n<html></html>";
-		assert.equal(expected, stream.read());
+		return render(stream, "html").then(stream => {
+			assert.equal("<!DOCTYPE html>\n<html></html>", stream.read());
+		});
+	});
 
+	it("should allow custom doctypes", () => {
 		// custom doctype
-		render = renderer("<!DOCTYPE … XHTML …>");
-		stream = new WritableStream();
-		render(stream, "html");
-		expected = "<!DOCTYPE … XHTML …>\n<html></html>";
-		assert.equal(expected, stream.read());
+		let render = renderer("<!DOCTYPE … XHTML …>");
+		let stream = new WritableStream();
+		return render(stream, "html").then(stream => {
+			assert.equal("<!DOCTYPE … XHTML …>\n<html></html>", stream.read());
+		});
 	});
 
 	it("should render unknown elements", () => {
-		let html = renderHTML("custom-element");
-		assert.equal("<!DOCTYPE html>\n<custom-element></custom-element>", html);
+		return renderHTML("custom-element").then(html => {
+			assert.equal("<!DOCTYPE html>\n<custom-element></custom-element>", html);
+		});
 	});
 
 	it("should omit closing tag for void elements", () => {
-		let html = renderHTML("input");
-		assert.equal("<!DOCTYPE html>\n<input>", html);
+		return renderHTML("input").then(html => {
+			assert.equal("<!DOCTYPE html>\n<input>", html);
+		});
+	});
+
+	it("should perform markup expansion for simple macros", () => {
+		return renderHTML("simple", { title: "hello world" }, "foo").then(html => {
+			let expected = "<!DOCTYPE html>\n<div title=\"hello world\">foo</div>";
+			assert.equal(expected, html);
+		});
 	});
 
 	it("should perform markup expansion for registered macros", () => {
-		let html = renderHTML("site-index", { title: "hello world" });
-		let expected = "<!DOCTYPE html>\n" +
-				"<html>" +
-				'<head><meta charset="utf-8"><title>hello world</title></head>' +
-				"<body><h1>hello world</h1><p>…</p></body>" +
-				"</html>";
-		assert.equal(expected, html);
+		return renderHTML("site-index", { title: "hello world" }).then(html => {
+			let expected = "<!DOCTYPE html>\n" +
+					"<html>" +
+					'<head><meta charset="utf-8"><title>hello world</title></head>' +
+					"<body><h1>hello world</h1><p>…</p></body>" +
+					"</html>";
+			assert.equal(expected, html);
+		});
+	});
+
+	it("should work with embedded elements", () => {
+		return renderHTML("div", null,
+				h("p", null, "foo")).then(html => {
+					assert.equal('<!DOCTYPE html>\n<div><p>foo</p></div>', html);
+				});
 	});
 
 	it("should encode contents", () => {
-		let html = renderHTML("div", { title: "foo <i>bar</i> baz" },
-				h("p", null, "lorem <em>ipsum</em> …"));
-		assert(html.includes('<div title="foo &lt;i&gt;bar&lt;/i&gt; baz">'));
-		assert(html.includes("<p>lorem &lt;em&gt;ipsum&lt;/em&gt; …</p>"));
+		return renderHTML("div", { title: "foo <i>bar</i> baz" },
+				h("p", null, "lorem <em>ipsum</em> …")).then(html => {
+					assert(html.includes('<div title="foo &lt;i&gt;bar&lt;/i&gt; baz">'));
+					assert(html.includes("<p>lorem &lt;em&gt;ipsum&lt;/em&gt; …</p>"));
+				});
 	});
 
 	it("should allow for raw HTML, cicrumventing content encoding", () => {
-		let html = renderHTML("p", null, new HTMLString("foo <i>bar</i> baz"));
-		assert(html.includes("<p>foo <i>bar</i> baz</p>"));
+		return renderHTML("p", null, new HTMLString("foo <i>bar</i> baz")).then(html => {
+			assert(html.includes("<p>foo <i>bar</i> baz</p>"));
+		});
 	});
 
 	it("should convert parameters to suitable attributes", () => {
-		let html = renderHTML("input", {
+		return renderHTML("input", {
 			type: "text",
 			id: 123,
 			name: null,
 			title: undefined,
 			autofocus: true,
 			disabled: false
-		});
-		assert.equal('<!DOCTYPE html>\n<input type="text" id="123" autofocus>', html);
-
-		[{}, [], new Date(), /.*/].forEach(obj => {
-			let fn = _ => renderHTML("div", { title: obj });
-			assert.throws(fn, /invalid attribute/);
+		}).then(html => {
+			assert.equal('<!DOCTYPE html>\n<input type="text" id="123" autofocus>', html);
 		});
 	});
 
+	it("should fail on invalid parameters", () => {
+		return Promise.all([{}, [], new Date(), /.*/].map(obj => {
+			return renderHTML("div", { title: obj }).
+				then(html => assert.fail("This should never happen")).
+				catch(error => assert(error.message.includes("invalid attribute")));
+		}));
+	});
+
 	it("should ignore blank values for child elements", () => {
-		let html = renderHTML("p", null, [null, "hello", undefined, "world", false]);
-		assert.equal("<!DOCTYPE html>\n<p>helloworld</p>", html);
+		return renderHTML("p", null, [null, "hello", undefined, "world", false]).
+		then(html => {
+			assert.equal("<!DOCTYPE html>\n<p>helloworld</p>", html);
+		});
+	});
+
+	it("should work with functions as child elements", () => {
+		return renderHTML("p", null, [() => h("foo", null, ["bar"])]).
+		then(html => {
+			assert.equal("<!DOCTYPE html>\n<p><foo>bar</foo></p>", html);
+		});
+	});
+
+	it("should work with promises as child elements", () => {
+		return renderHTML("p", null, [new Promise((resolve, reject) => {
+			setTimeout(() => resolve(h("foo", null, ["bar"])), 100);
+		})]).
+		then(html => {
+			assert.equal("<!DOCTYPE html>\n<p><foo>bar</foo></p>", html);
+		});
 	});
 });
 
@@ -84,15 +127,8 @@ function renderHTML(tag, params, children) {
 	let render = renderer();
 	let stream = new WritableStream();
 
-	if(children) { // need to generate root-container macro
-		let container = `dummy-${uid()}`;
-		registerMacro(container, _ => h(tag, params, children));
-		render(stream, container);
-	} else {
-		render(stream, tag, params);
-	}
-
-	return stream.read();
+	return render(stream, tag, params, children).
+		then(stream => stream.read());
 }
 
 class WritableStream {
