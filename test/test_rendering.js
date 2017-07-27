@@ -35,6 +35,11 @@ describe("renderer", _ => {
 		assert.equal("<!DOCTYPE html>\n<input>", html);
 	});
 
+	it("should always write a closing tag if there is any content", () => {
+		let html = renderHTML("img", null, ["some text why not?"]);
+		assert.equal("<!DOCTYPE html>\n<img>some text why not?</img>", html);
+	});
+
 	it("should perform markup expansion for registered macros", () => {
 		let html = renderHTML("site-index", { title: "hello world" });
 		let expected = "<!DOCTYPE html>\n" +

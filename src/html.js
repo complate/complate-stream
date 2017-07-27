@@ -30,7 +30,7 @@ export default function generateHTML(tag, params, ...children) {
 		});
 
 		// void elements must not have closing tags
-		if(!VOID_ELEMENTS[tag]) {
+		if(children.length > 0 || !VOID_ELEMENTS[tag]) {
 			stream.write(`</${tag}>`);
 		}
 		stream.flush();
