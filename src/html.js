@@ -38,13 +38,11 @@ export default function generateHTML(tag, params, ...children) {
 			if(child.isHTMLGenerator) {
 				streamPromise = child(streamPromise);
 			} else if(child.then) { // Some Promise returning a isHTMLGenerator
-				streamPromise = streamPromise.then(stream => {
-					return child.then(elements => {
-						if(!elements.isHTMLGenerator) {
-							throw new Error("Expecting promise to return a HTML generator function");
-						}
-						return elements(Promise.resolve(stream));
-					});
+				streamPromise = Promise.all([streamPromise, child]).then(function([stream, elements]) {
+					if(!elements.isHTMLGenerator) {
+						throw new Error("Expecting promise to return a HTML generator function");
+					}
+					return elements(Promise.resolve(stream));
 				});
 			} else if(child.call) { // Some function returning a isHTMLGenerator
 				let elements = child();
