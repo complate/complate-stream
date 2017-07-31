@@ -4,9 +4,13 @@ import { flatCompact } from "./util";
 const TAG_MACROS = {};
 
 export default function documentRenderer(doctype = "<!DOCTYPE html>") {
-	return (stream, element, params) => {
-		stream.writeln(doctype);
-		createElement(element, params)(stream);
+	return (stream, element, params, ...children) => {
+		let p = Promise.resolve(stream).
+			then(stream => {
+				stream.writeln(doctype);
+				return stream;
+			});
+		return createElement(element, params, ...children)(p);
 	};
 }
 

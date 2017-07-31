@@ -9,9 +9,25 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
+// This function is basically called by `createElement` (with the same
+// parameters). The indirection is a simple abstaction to
+// encapsulate the macro functionality and not to mess this function
+// up even more.
+// The return value is a function again which is used to
+// build up a promise chain (taking a promise and returning a
+// promise based upon the input promise).
+// Why don't we build up the promise chain directly? The reason
+// is that we don't have the possibility to put a promise object
+// into generateHTML's parameter list since the method is called
+// without any context by createElement (wich doesn't have any context
+// too). So the returned "middle" function is only used to pass in the
+// promise.
 export default function generateHTML(tag, params, ...children) {
-	return stream => {
-		stream.write(`<${tag}${generateAttributes(params)}>`);
+	let fn = streamPromise => {
+		streamPromise = streamPromise.then(stream => {
+			stream.write(`<${tag}${generateAttributes(params)}>`);
+			return stream;
+		});
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -19,22 +35,47 @@ export default function generateHTML(tag, params, ...children) {
 		// * `children` might contain nested arrays due to the use of
 		//   collections within JSX (`{items.map(item => <span>item</span>)}`)
 		flatCompact(children).forEach(child => {
-			if(child.call) {
-				child(stream);
+			if(child.isHTMLGenerator) {
+				streamPromise = child(streamPromise);
+			} else if(child.then) { // Some Promise returning a isHTMLGenerator
+				streamPromise = Promise.all([streamPromise, child]).then(function([stream, elements]) {
+					if(!elements.isHTMLGenerator) {
+						throw new Error("Expecting promise to return a HTML generator function");
+					}
+					return elements(Promise.resolve(stream));
+				});
+			} else if(child.call) { // Some function returning a isHTMLGenerator
+				let elements = child();
+				if(!elements.isHTMLGenerator) {
+					throw new Error("Expecting function to return a HTML generator function");
+				}
+				streamPromise = elements(streamPromise);
 			} else if(child instanceof HTMLString) {
-				stream.write(child.value);
+				streamPromise = streamPromise.then(stream => {
+					stream.write(child.value);
+					return stream;
+				});
 			} else {
 				let txt = htmlEncode(child.toString());
-				stream.write(txt);
+				streamPromise = streamPromise.then(stream => {
+					stream.write(txt);
+					return stream;
+				});
 			}
 		});
 
-		// void elements must not have closing tags
-		if(!VOID_ELEMENTS[tag]) {
-			stream.write(`</${tag}>`);
-		}
-		stream.flush();
+		return streamPromise.then(stream => {
+			// void elements must not have closing tags
+			if(!VOID_ELEMENTS[tag]) {
+				stream.write(`</${tag}>`);
+			}
+			stream.flush();
+			return stream;
+		});
 	};
+
+	fn.isHTMLGenerator = true; // Tag this function to distinguish it from other functions supplied by the user
+	return fn;
 }
 
 export function HTMLString(str) {
