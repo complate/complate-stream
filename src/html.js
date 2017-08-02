@@ -11,7 +11,7 @@ const VOID_ELEMENTS = {}; // poor man's set
 
 export default function generateHTML(tag, params, ...children) {
 	return stream => {
-		stream.write(`<${tag}${generateAttributes(params)}>`);
+		stream.write(`<${tag}${generateAttributes(params, tag)}>`);
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -41,7 +41,7 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
-function generateAttributes(params) {
+function generateAttributes(params, tag) {
 	if(!params) {
 		return "";
 	}
@@ -64,12 +64,12 @@ function generateAttributes(params) {
 			if(typeof value === "number") {
 				value = value.toString();
 			} else if(!value.substr) {
-				throw new Error(`invalid attribute value: \`${JSON.stringify(value)}\``);
+				abort("invalid attribute value", value, tag);
 			}
 
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 			if(/ |"|'|>|'|\/|=/.test(name)) {
-				throw new Error(`invalid attribute name: \`${JSON.stringify(name)}\``);
+				abort("invalid attribute name", name, tag);
 			}
 
 			memo.push(`${name}="${htmlEncode(value, true)}"`);
@@ -89,4 +89,12 @@ function htmlEncode(str, attribute) {
 			replace(/'/g, "&#x27;");
 	}
 	return res;
+}
+
+function abort(msg, value, tag) {
+	msg = `${msg}: \`${JSON.stringify(value)}\``;
+	if(tag) {
+		msg += ` - did you perhaps forget to register \`${tag}\` as a macro?`;
+	}
+	throw new Error(msg);
 }
