@@ -5,7 +5,9 @@ const TAG_MACROS = {};
 
 export default function documentRenderer(doctype = "<!DOCTYPE html>") {
 	return (stream, tag, params) => {
-		stream.writeln(doctype);
+		if(doctype) {
+			stream.writeln(doctype);
+		}
 		createElement(tag, params)(stream);
 	};
 }
