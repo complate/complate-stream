@@ -22,6 +22,8 @@ export function registerMacro(tag, fn) { // TODO: rename?
 
 export function createElement(tag, params, ...children) {
 	let macro = TAG_MACROS[tag];
+	/* eslint-disable indent */
 	return macro ? macro(params, ...flatCompact(children)) :
 			generateHTML(tag, params, ...children);
+	/* eslint-enable indent */
 }
