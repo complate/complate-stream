@@ -9,7 +9,7 @@ let assert = require("assert");
 let { registerMacro, createElement: h } = renderer;
 
 describe("renderer", _ => {
-	it("should generate a render function for streaming HTML documents", () => {
+	it("should generate a render function for streaming HTML documents/fragments", () => {
 		// defaults to HTML5
 		let render = renderer();
 		let stream = new WritableStream();
@@ -23,22 +23,28 @@ describe("renderer", _ => {
 		render(stream, "html");
 		expected = "<!DOCTYPE … XHTML …>\n<html></html>";
 		assert.equal(expected, stream.read());
+
+		// suppressed doctype
+		render = renderer(null);
+		stream = new WritableStream();
+		render(stream, "html");
+		expected = "<html></html>";
+		assert.equal(expected, stream.read());
 	});
 
 	it("should render unknown elements", () => {
 		let html = renderHTML("custom-element");
-		assert.equal("<!DOCTYPE html>\n<custom-element></custom-element>", html);
+		assert.equal("<custom-element></custom-element>", html);
 	});
 
 	it("should omit closing tag for void elements", () => {
 		let html = renderHTML("input");
-		assert.equal("<!DOCTYPE html>\n<input>", html);
+		assert.equal("<input>", html);
 	});
 
 	it("should perform markup expansion for registered macros", () => {
 		let html = renderHTML("site-index", { title: "hello world" });
-		let expected = "<!DOCTYPE html>\n" +
-				"<html>" +
+		let expected = "<html>" +
 				'<head><meta charset="utf-8"><title>hello world</title></head>' +
 				"<body><h1>hello world</h1><p>…</p></body>" +
 				"</html>";
@@ -66,7 +72,7 @@ describe("renderer", _ => {
 			autofocus: true,
 			disabled: false
 		});
-		assert.equal('<!DOCTYPE html>\n<input type="text" id="123" autofocus>', html);
+		assert.equal('<input type="text" id="123" autofocus>', html);
 
 		[{}, [], new Date(), /.*/].forEach(obj => {
 			let fn = _ => renderHTML("div", { title: obj });
@@ -76,12 +82,12 @@ describe("renderer", _ => {
 
 	it("should ignore blank values for child elements", () => {
 		let html = renderHTML("p", null, [null, "hello", undefined, "world", false]);
-		assert.equal("<!DOCTYPE html>\n<p>helloworld</p>", html);
+		assert.equal("<p>helloworld</p>", html);
 	});
 });
 
 function renderHTML(tag, params, children) {
-	let render = renderer();
+	let render = renderer(null);
 	let stream = new WritableStream();
 
 	if(children) { // need to generate root-container macro
