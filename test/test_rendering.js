@@ -1,12 +1,11 @@
 /* global describe, it */
 require("./es6_module_syntax");
 require("./macros");
-let uid = require("./util").uid;
 let renderer = require("../src/renderer");
-let HTMLString = require("../src/html").HTMLString;
+let { HTMLString } = require("../src/html");
 let assert = require("assert");
 
-let { registerMacro, createElement: h } = renderer;
+let { createElement: h } = renderer;
 
 describe("renderer", _ => {
 	it("should generate a render function for streaming HTML documents/fragments", () => {
@@ -80,23 +79,39 @@ describe("renderer", _ => {
 		});
 	});
 
+	it("should support both elements and strings/numbers as child elements", () => {
+		let html = renderHTML("p", null,
+				h("em", null, "hello"),
+				"lorem ipsum",
+				h("mark", null, "world"),
+				123);
+		assert.equal("<p><em>hello</em>lorem ipsum<mark>world</mark>123</p>",
+				html);
+	});
+
 	it("should ignore blank values for child elements", () => {
-		let html = renderHTML("p", null, [null, "hello", undefined, "world", false]);
+		let html = renderHTML("p", null, null, "hello", undefined, "world", false);
 		assert.equal("<p>helloworld</p>", html);
+	});
+
+	it("should support nested arrays for child elements", () => {
+		let html = renderHTML("p", null, "foo", ["hello", ["…", "…"], "world"], "bar");
+		assert.equal("<p>foohello……worldbar</p>", html);
 	});
 });
 
-function renderHTML(tag, params, children) {
+function renderHTML(tag, params, ...children) {
 	let render = renderer(null);
 	let stream = new WritableStream();
 
-	if(children) { // need to generate root-container macro
-		let container = `dummy-${uid()}`;
-		registerMacro(container, _ => h(tag, params, children));
-		render(stream, container);
-	} else {
-		render(stream, tag, params);
+	if(children.length) { // `documentRenderer` does not support child elements
+		params = Object.assign({}, params, {
+			_tag: tag,
+			_children: children
+		});
+		tag = "dummy-container";
 	}
+	render(stream, tag, params);
 
 	return stream.read();
 }
