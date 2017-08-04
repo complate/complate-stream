@@ -1,4 +1,6 @@
 /* global describe, it */
+"use strict";
+
 require("./es6_module_syntax");
 let { flatCompact } = require("../src/util");
 let assert = require("assert");

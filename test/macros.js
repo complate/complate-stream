@@ -1,3 +1,5 @@
+"use strict";
+
 let { registerMacro, createElement: h } = require("../src/renderer");
 
 registerMacro("site-index", ({ title }) => {

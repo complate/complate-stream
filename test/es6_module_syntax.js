@@ -2,6 +2,7 @@
 
 // converts ES6 module syntax to CommonJS
 // fork of unmaintained import-export <https://github.com/Macmee/import-export>
+// TODO: use ESM (@std/esm) instead
 
 var hook = require('node-hook');
 
