@@ -4,74 +4,129 @@
 require("./es6_module_syntax");
 let WritableStream = require("./stream");
 let generateHTML = require("../src/html");
+let { awaitAll } = require("../src/util");
 let assert = require("assert");
 
 let h = generateHTML;
 let { HTMLString } = generateHTML;
 
 describe("HTML rendering", _ => {
-	it("should generate a render function for streaming HTML elements", () => {
+	it("should generate a render function for streaming HTML elements", done => {
 		let stream = new WritableStream();
 		let el = generateHTML("body");
-		el(stream);
-		let html = stream.read();
+		el(stream, _ => {
+			let html = stream.read();
 
-		assert.equal(html, "<body></body>");
+			assert.equal(html, "<body></body>");
+			done();
+		});
 	});
 
-	it("should correspond to the function signature prescribed by JSX", () => {
+	it("should correspond to the function signature prescribed by JSX", done => {
 		let el = h("body", { class: "foo" }, "lorem ipsum",
 				"dolor sit amet");
 
-		assert.equal(render(el), '<body class="foo">lorem ipsumdolor sit amet</body>');
+		render(el, html => {
+			assert.equal(html, '<body class="foo">lorem ipsumdolor sit amet</body>');
+			done();
+		});
 	});
 });
 
 describe("HTML elements", _ => {
-	it("should support nested elements", () => {
+	it("should support nested elements", done => {
 		let el = h("foo", null,
-				h("bar"));
+				h("bar", null,
+						h("baz", null, "lorem", "ipsum")));
 
-		assert.equal(render(el), "<foo><bar></bar></foo>");
+		render(el, html => {
+			assert.equal(html, "<foo><bar><baz>loremipsum</baz></bar></foo>");
+			done();
+		});
 	});
 
-	it("should support unknown elements", () => {
+	it("should support unknown elements", done => {
 		let el = h("custom-element");
 
-		assert.equal(render(el), "<custom-element></custom-element>");
+		render(el, html => {
+			assert.equal(html, "<custom-element></custom-element>");
+			done();
+		});
 	});
 
-	it("should omit closing tag for void elements", () => {
+	it("should omit closing tag for void elements", done => {
 		let el = h("input");
 
-		assert.equal(render(el), "<input>");
+		render(el, html => {
+			assert.equal(html, "<input>");
+			done();
+		});
 	});
 
-	it("should support both elements and strings/numbers as child elements", () => {
+	it("should support both elements and strings/numbers as child elements", done => {
 		let el = h("p", null,
 				h("em", null, "hello"),
 				"lorem ipsum",
 				h("mark", null, "world"),
 				123);
 
-		assert.equal(render(el), "<p><em>hello</em>lorem ipsum<mark>world</mark>123</p>");
+		render(el, html => {
+			assert.equal(html, "<p><em>hello</em>lorem ipsum<mark>world</mark>123</p>");
+			done();
+		});
 	});
 
-	it("should ignore blank values for child elements", () => {
+	it("should ignore blank values for child elements", done => {
 		let el = h("p", null, null, "hello", undefined, "world", false);
 
-		assert.equal(render(el), "<p>helloworld</p>");
+		render(el, html => {
+			assert.equal(html, "<p>helloworld</p>");
+			done();
+		});
 	});
 
-	it("should support nested arrays for child elements", () => {
+	it("should support nested arrays for child elements", done => {
 		let el = h("p", null, "foo", ["hello", ["…", "…"], "world"], "bar");
 
-		assert.equal(render(el), "<p>foohello……worldbar</p>");
+		render(el, html => {
+			assert.equal(html, "<p>foohello……worldbar</p>");
+			done();
+		});
+	});
+
+	it("should support generated child elements", done => {
+		let el = h("div", null,
+				"lorem ipsum",
+				["foo", "bar", "baz"].map(item => {
+					return h("i", null, item);
+				}),
+				"dolor sit amet");
+
+		render(el, html => {
+			assert.equal(html,
+					"<div>lorem ipsum<i>foo</i><i>bar</i><i>baz</i>dolor sit amet</div>");
+			done();
+		});
+	});
+
+	it("should support deferred child elements", done => {
+		let deferred = callback => {
+			setTimeout(_ => {
+				let el = h("em", null, "lipsum");
+				callback(el);
+			}, 10);
+		};
+		let el = h("p", null, "foo", deferred, "bar");
+
+		render(el, html => {
+			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			done();
+		});
 	});
 });
 
 describe("HTML attributes", _ => {
-	it("should convert parameters to suitable attributes", () => {
+	it("should convert parameters to suitable attributes", done => {
 		let el = h("input", {
 			type: "text",
 			id: 123,
@@ -81,11 +136,17 @@ describe("HTML attributes", _ => {
 			disabled: false
 		});
 
-		assert.equal(render(el), '<input type="text" id="123" autofocus>');
+		render(el, html => {
+			assert.equal(html, '<input type="text" id="123" autofocus>');
+			done();
+		});
 	});
 
-	it("should balk at invalid attribute names", () => {
+	it("should balk at invalid attribute names", done => {
 		let names = [{}, "foo bar", 'foo"bar', "foo'bar", "foo/bar", "foo=bar"];
+
+		let end = awaitAll(names.length, done);
+
 		names.forEach(name => {
 			let stream = new WritableStream();
 			let fn = _ => {
@@ -96,11 +157,15 @@ describe("HTML attributes", _ => {
 				el(stream);
 			};
 			assert.throws(fn, /invalid attribute name/);
+			end();
 		});
 	});
 
-	it("should balk at invalid attribute values", () => {
+	it("should balk at invalid attribute values", done => {
 		let values = [{}, [], new Date(), /.*/];
+
+		let end = awaitAll(values.length, done);
+
 		values.forEach(value => {
 			let stream = new WritableStream();
 			let fn = _ => {
@@ -108,31 +173,38 @@ describe("HTML attributes", _ => {
 				el(stream);
 			};
 			assert.throws(fn, /invalid attribute value/);
+			end();
 		});
 	});
 });
 
 describe("HTML encoding", _ => {
-	it("should encode attributes and contents", () => {
+	it("should encode attributes and contents", done => {
 		let el = h("div", { title: 'foo& <i>"bar"</i> \'baz' },
 				h("p", null, 'lorem& <em>"ipsum"</em> \'…'));
 
-		let html = render(el);
-		assert(html.includes("<div " +
-				'title="foo&amp; &lt;i&gt;&quot;bar&quot;&lt;/i&gt; &#x27;baz">'));
-		assert(html.includes('<p>lorem&amp; &lt;em&gt;"ipsum"&lt;/em&gt; \'…</p>'));
+		render(el, html => {
+			assert(html.includes("<div " +
+					'title="foo&amp; &lt;i&gt;&quot;bar&quot;&lt;/i&gt; &#x27;baz">'));
+			assert(html.includes('<p>lorem&amp; &lt;em&gt;"ipsum"&lt;/em&gt; \'…</p>'));
+			done();
+		});
 	});
 
-	it("should allow for raw HTML, cicrumventing content encoding", () => {
+	it("should allow for raw HTML, cicrumventing content encoding", done => {
 		let el = h("p", null, new HTMLString("foo <i>bar</i> baz"));
 
-		let html = render(el);
-		assert(html.includes("<p>foo <i>bar</i> baz</p>"));
+		render(el, html => {
+			assert(html.includes("<p>foo <i>bar</i> baz</p>"));
+			done();
+		});
 	});
 });
 
-function render(element) {
+function render(element, callback) {
 	let stream = new WritableStream();
-	element(stream);
-	return stream.read();
+	element(stream, _ => {
+		let html = stream.read();
+		callback(html);
+	});
 }

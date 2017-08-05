@@ -1,4 +1,4 @@
-import { flatCompact } from "./util";
+import { awaitAll, flatCompact } from "./util";
 
 // cf. https://www.w3.org/TR/html5/syntax.html#void-elements
 const VOID_ELEMENTS = {}; // poor man's set
@@ -9,8 +9,34 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
+// generates an "element generator" function which writes the respective HTML
+// element(s) to an output stream
+// that element generator expects two arguments: a writable stream¹ and a
+// callback - the latter is invoked upon conclusion, without any arguments²
+//
+// this indirection is necessary because this function implements the signature
+// expected by JSX, so not only do we need to inject additional arguments, we
+// to defer element creation in order to re-align the invocation order³ - thus
+// element generators operate as placeholders which are unwrapped later
+//
+// ¹ an object with methods `#write`, `#writeln` and `#flush`
+//
+// ² TODO: error handling
+//
+// ³ JSX is essentially a DSL for function invocations:
+//
+//     <foo alpha="hello" bravo="world">
+//         <bar>…</bar>
+//     </foo>
+//
+//   turns into
+//
+//     createElement("foo", { alpha: "hello", bravo: "world" },
+//             createElement("bar", null, "…"));
+//
+//   without this indirection, `<bar>` would be created before `<foo>`
 export default function generateHTML(tag, params, ...children) {
-	return stream => {
+	return (stream, callback) => {
 		stream.write(`<${tag}${generateAttributes(params, tag)}>`);
 
 		// NB:
@@ -18,28 +44,62 @@ export default function generateHTML(tag, params, ...children) {
 		//   `undefined`/`null`/`false` is much simpler)
 		// * `children` might contain nested arrays due to the use of
 		//   collections within JSX (`{items.map(item => <span>{item}</span>)}`)
-		flatCompact(children).forEach(child => {
-			if(child.call) {
-				child(stream);
-			} else if(child instanceof HTMLString) {
-				stream.write(child.value);
-			} else {
-				let txt = htmlEncode(child.toString());
-				stream.write(txt);
-			}
-		});
+		children = flatCompact(children);
 
-		// void elements must not have closing tags
-		if(!VOID_ELEMENTS[tag]) {
-			stream.write(`</${tag}>`);
+		let total = children.length;
+		if(total === 0) {
+			closeElement(stream, tag, callback);
+		} else {
+			let close = awaitAll(total, _ => {
+				closeElement(stream, tag, callback);
+			});
+			processChildren(stream, children, close);
 		}
-		stream.flush();
 	};
 }
 
 export function HTMLString(str) {
 	this.value = str;
 }
+
+function processChildren(stream, children, callback) {
+	let [child, ...remainder] = children;
+
+	if(child.call) {
+		// distinguish regular element generators from deferred child elements
+		if(child.length === 2) { // XXX: arity makes for a brittle heuristic
+			child(stream, callback);
+		} else { // deferred
+			child(element => {
+				element(stream, callback);
+				if(remainder.length) {
+					processChildren(stream, remainder, callback);
+				}
+			});
+			return;
+		}
+	} else {
+		/* eslint-disable indent */
+		let content = child instanceof HTMLString ? child.value :
+				htmlEncode(child.toString());
+		/* eslint-enable indent */
+		stream.write(content);
+		callback();
+	}
+
+	if(remainder.length) {
+		processChildren(stream, remainder, callback);
+	}
+}
+
+function closeElement(stream, tag, callback) {
+	if(!VOID_ELEMENTS[tag]) { // void elements must not have closing tags
+		stream.write(`</${tag}>`);
+	}
+
+	stream.flush();
+	callback();
+};
 
 function generateAttributes(params, tag) {
 	if(!params) {
