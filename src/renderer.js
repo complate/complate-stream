@@ -1,5 +1,5 @@
 import generateHTML from "./html";
-import { flatCompact } from "./util";
+import { flatCompact, noop } from "./util";
 
 const TAG_MACROS = {};
 
@@ -9,7 +9,12 @@ export default function documentRenderer(doctype = "<!DOCTYPE html>") {
 			stream.writeln(doctype);
 		}
 		let element = createElement(tag, params);
-		element(stream, callback);
+
+		if(callback) { // non-blocking mode
+			element(stream, true, callback);
+		} else { // blocking mode
+			element(stream, false, noop);
+		}
 	};
 }
 

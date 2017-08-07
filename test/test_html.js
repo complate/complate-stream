@@ -4,7 +4,7 @@
 require("./es6_module_syntax");
 let WritableStream = require("./stream");
 let generateHTML = require("../src/html");
-let { awaitAll } = require("../src/util");
+let { awaitAll, noop } = require("../src/util");
 let assert = require("assert");
 
 let h = generateHTML;
@@ -14,7 +14,7 @@ describe("HTML rendering", _ => {
 	it("should generate a render function for streaming HTML elements", done => {
 		let stream = new WritableStream();
 		let el = generateHTML("body");
-		el(stream, _ => {
+		el(stream, true, _ => {
 			let html = stream.read();
 
 			assert.equal(html, "<body></body>");
@@ -109,7 +109,20 @@ describe("HTML elements", _ => {
 		});
 	});
 
-	it("should support deferred child elements", done => {
+	it("should support blocking deferred child elements", done => {
+		let deferred = callback => {
+			let el = h("em", null, "lipsum");
+			callback(el);
+		};
+		let el = h("p", null, "foo", deferred, "bar");
+
+		render(el, html => {
+			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			done();
+		});
+	});
+
+	it("should support non-blocking deferred child elements in async mode", done => {
 		let deferred = callback => {
 			setTimeout(_ => {
 				let el = h("em", null, "lipsum");
@@ -122,6 +135,21 @@ describe("HTML elements", _ => {
 			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
 			done();
 		});
+	});
+
+	it("should balk at non-blocking deferred child elements in sync mode", done => {
+		let deferred = callback => {
+			setTimeout(_ => {
+				let el = h("em", null, "lipsum");
+				callback(el);
+			}, 10);
+		};
+		let el = h("p", null, "foo", deferred, "bar");
+
+		let stream = new WritableStream();
+		let fn = _ => el(stream, false, noop);
+		assert.throws(fn, /invalid non-blocking operation/);
+		done();
 	});
 });
 
@@ -154,7 +182,7 @@ describe("HTML attributes", _ => {
 				attribs[name] = "lipsum";
 
 				let el = h("div", attribs);
-				el(stream);
+				el(stream, true, noop);
 			};
 			assert.throws(fn, /invalid attribute name/);
 			end();
@@ -170,7 +198,7 @@ describe("HTML attributes", _ => {
 			let stream = new WritableStream();
 			let fn = _ => {
 				let el = h("div", { title: value });
-				el(stream);
+				el(stream, true, noop);
 			};
 			assert.throws(fn, /invalid attribute value/);
 			end();
@@ -203,8 +231,8 @@ describe("HTML encoding", _ => {
 
 function render(element, callback) {
 	let stream = new WritableStream();
-	element(stream, _ => {
+	element(stream, true, _ => {
 		let html = stream.read();
-		callback(html);
+		callback && callback(html);
 	});
 }

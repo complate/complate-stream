@@ -11,8 +11,9 @@ const VOID_ELEMENTS = {}; // poor man's set
 
 // generates an "element generator" function which writes the respective HTML
 // element(s) to an output stream
-// that element generator expects two arguments: a writable stream¹ and a
-// callback - the latter is invoked upon conclusion, without any arguments²
+// that element generator expects three arguments: a writable stream¹, a flag
+// permitting non-blocking I/O and a callback - the latter is invoked upon
+// conclusion, without any arguments²
 //
 // this indirection is necessary because this function implements the signature
 // expected by JSX, so not only do we need to inject additional arguments, we
@@ -36,7 +37,7 @@ const VOID_ELEMENTS = {}; // poor man's set
 //
 //   without this indirection, `<bar>` would be created before `<foo>`
 export default function generateHTML(tag, params, ...children) {
-	return (stream, callback) => {
+	return (stream, nonBlocking, callback) => {
 		stream.write(`<${tag}${generateAttributes(params, tag)}>`);
 
 		// NB:
@@ -53,7 +54,7 @@ export default function generateHTML(tag, params, ...children) {
 			let close = awaitAll(total, _ => {
 				closeElement(stream, tag, callback);
 			});
-			processChildren(stream, children, close);
+			processChildren(stream, children, nonBlocking, close);
 		}
 	};
 }
@@ -62,21 +63,37 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
-function processChildren(stream, children, callback) {
+function processChildren(stream, children, nonBlocking, callback) {
 	let [child, ...remainder] = children;
 
 	if(child.call) {
 		// distinguish regular element generators from deferred child elements
-		if(child.length === 2) { // XXX: arity makes for a brittle heuristic
-			child(stream, callback);
+		if(child.length !== 1) { // XXX: arity makes for a brittle heuristic
+			child(stream, nonBlocking, callback);
 		} else { // deferred
-			child(element => {
-				element(stream, callback);
+			let fn = element => {
+				element(stream, nonBlocking, callback);
 				if(remainder.length) {
-					processChildren(stream, remainder, callback);
+					processChildren(stream, remainder, nonBlocking, callback);
 				}
-			});
-			return;
+			};
+
+			if(nonBlocking) {
+				child(fn);
+			} else { // ensure deferred child element is synchronous
+				let invoked = false;
+				let _fn = fn;
+				fn = function() {
+					invoked = true;
+					return _fn.apply(null, arguments);
+				};
+				child(fn);
+
+				if(!nonBlocking && !invoked) {
+					throw new Error("invalid non-blocking operation detected");
+				}
+			}
+			return; // `remainder` processing continues recursively
 		}
 	} else {
 		/* eslint-disable indent */
@@ -88,7 +105,7 @@ function processChildren(stream, children, callback) {
 	}
 
 	if(remainder.length) {
-		processChildren(stream, remainder, callback);
+		processChildren(stream, remainder, nonBlocking, callback);
 	}
 }
 

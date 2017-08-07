@@ -38,6 +38,25 @@ describe("renderer", _ => {
 		});
 	});
 
+	it("should support blocking mode", done => {
+		let stream = new WritableStream();
+		let render = renderer(null);
+
+		render(stream, "blocking-container", {});
+		assert.equal(stream.read(),
+				"<div><p>…</p><p><i>lorem<em>…</em>ipsum</i></p><p>…</p></div>");
+		done();
+	});
+
+	it("should detect non-blocking child elements in blocking mode", done => {
+		let stream = new WritableStream();
+		let render = renderer(null);
+
+		let fn = _ => render(stream, "nonblocking-container", null);
+		assert.throws(fn, /invalid non-blocking operation/);
+		done();
+	});
+
 	it("should render unknown elements which are not registered as macros", done => {
 		renderFragment("custom-element", null, html => {
 			assert.equal(html, "<custom-element></custom-element>");

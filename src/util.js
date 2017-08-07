@@ -21,3 +21,5 @@ export function flatCompact(items) {
 		/* eslint-enable indent */
 	}, []);
 }
+
+export function noop() {}
