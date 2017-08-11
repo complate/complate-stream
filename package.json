@@ -13,18 +13,21 @@
 		"url": "https://github.com/complate/complate-stream/issues"
 	},
 	"module": "src/index.js",
+	"@std/esm": {
+		"esm": "all"
+	},
 	"scripts": {
 		"start": "npm-run-all --parallel lint test",
-		"test": "mocha test/test_*.js",
+		"test": "mocha -r @std/esm test/test_*.js",
 		"lint": "eslint --cache *.js src test && echo ✓"
 	},
 	"dependencies": {},
 	"devDependencies": {
+		"@std/esm": "^0.2.1",
 		"eslint": "^4.4.1",
 		"eslint-config-fnd": "^1.2.0",
 		"mocha": "^3.5.0",
-		"node-hook": "^1.0.0",
 		"npm-run-all": "^4.0.2",
-		"release-util-fnd": "^1.0.3"
+		"release-util-fnd": "^1.0.4"
 	}
 }

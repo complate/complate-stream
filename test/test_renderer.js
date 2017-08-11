@@ -1,11 +1,8 @@
 /* global describe, it */
-"use strict";
-
-require("./es6_module_syntax");
-require("./macros");
-let WritableStream = require("./stream");
-let renderer = require("../src/renderer");
-let assert = require("assert");
+import "./macros";
+import WritableStream from "./stream";
+import renderer from "../src/renderer";
+import assert from "assert";
 
 describe("renderer", _ => {
 	it("should generate a render function for streaming HTML documents", done => {

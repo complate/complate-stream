@@ -1,6 +1,4 @@
-"use strict";
-
-let { registerMacro, createElement: h } = require("../src/renderer");
+import { registerMacro, createElement as h } from "../src/renderer";
 
 registerMacro("site-index", ({ title }) => {
 	return h("default-layout", { title },

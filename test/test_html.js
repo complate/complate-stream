@@ -1,14 +1,10 @@
 /* global describe, it */
-"use strict";
-
-require("./es6_module_syntax");
-let WritableStream = require("./stream");
-let generateHTML = require("../src/html");
-let { awaitAll, noop } = require("../src/util");
-let assert = require("assert");
+import WritableStream from "./stream";
+import generateHTML, { HTMLString } from "../src/html";
+import { awaitAll, noop } from "../src/util";
+import assert from "assert";
 
 let h = generateHTML;
-let { HTMLString } = generateHTML;
 
 describe("HTML rendering", _ => {
 	it("should generate a render function for streaming HTML elements", done => {

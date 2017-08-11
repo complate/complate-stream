@@ -1,9 +1,6 @@
 /* global describe, it */
-"use strict";
-
-require("./es6_module_syntax");
-let { awaitAll, flatCompact } = require("../src/util");
-let assert = require("assert");
+import { awaitAll, flatCompact } from "../src/util";
+import assert from "assert";
 
 describe("`awaitAll`", _ => {
 	it("should invoke callback only after the specified number of invocations", done => {

@@ -1,6 +1,4 @@
-"use strict";
-
-module.exports = class WritableStream {
+export default class WritableStream {
 	constructor() {
 		this._buffer = [];
 	}
