@@ -1,25 +1,13 @@
-import { registerMacro, createElement as h } from "../src/renderer";
+import { createElement as h } from "../src/renderer";
 
-registerMacro("site-index", ({ title }) => {
-	return h("default-layout", { title },
+export function SiteIndex({ title }) {
+	return h(DefaultLayout, { title },
 			h("h1", null, title),
 			h("p", null, "…"));
-});
+}
 
-registerMacro("default-layout", ({ title }, ...children) => {
-	return h("html", null,
-			h("head", null,
-					h("meta", { charset: "utf-8" }),
-					h("title", null, title)),
-			h("body", null, children));
-});
-
-registerMacro("fragment-layout", (_, ...children) => {
-	return h("div", null, children);
-});
-
-registerMacro("blocking-container", _ => {
-	return h("fragment-layout", null,
+export function BlockingContainer() {
+	return h(FragmentLayout, null,
 			h("p", null, "…"),
 			h("p", null, callback => {
 				let el = h("i", null,
@@ -32,10 +20,10 @@ registerMacro("blocking-container", _ => {
 				callback(el);
 			}),
 			h("p", null, "…"));
-});
+}
 
-registerMacro("nonblocking-container", _ => {
-	return h("fragment-layout", null,
+export function NonBlockingContainer() {
+	return h(FragmentLayout, null,
 			h("p", null, "…"),
 			h("p", null, callback => {
 				setTimeout(_ => {
@@ -44,15 +32,16 @@ registerMacro("nonblocking-container", _ => {
 				}, 10);
 			}),
 			h("p", null, "…"));
-});
+}
 
-registerMacro("dummy-container", params => {
-	params = Object.assign({}, params);
-	let [tag, children] = ["_tag", "_children"].map(prop => {
-		let value = params[prop];
-		delete params[prop];
-		return value;
-	});
+function DefaultLayout({ title }, ...children) {
+	return h("html", null,
+			h("head", null,
+					h("meta", { charset: "utf-8" }),
+					h("title", null, title)),
+			h("body", null, children));
+}
 
-	return h(tag, params, ...children);
-});
+function FragmentLayout(_, ...children) {
+	return h("div", null, children);
+}

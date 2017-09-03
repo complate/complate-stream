@@ -1,5 +1,5 @@
 /* global describe, it */
-import "./macros";
+import { SiteIndex, BlockingContainer, NonBlockingContainer } from "./macros";
 import WritableStream from "./stream";
 import renderer from "../src/renderer";
 import assert from "assert";
@@ -39,7 +39,7 @@ describe("renderer", _ => {
 		let stream = new WritableStream();
 		let render = renderer(null);
 
-		render(stream, "blocking-container", {});
+		render(stream, BlockingContainer, null);
 		assert.equal(stream.read(),
 				"<div><p>…</p><p><i>lorem<em>…</em>ipsum</i></p><p>…</p></div>");
 		done();
@@ -49,20 +49,20 @@ describe("renderer", _ => {
 		let stream = new WritableStream();
 		let render = renderer(null);
 
-		let fn = _ => render(stream, "nonblocking-container", null);
+		let fn = _ => render(stream, NonBlockingContainer, null);
 		assert.throws(fn, /invalid non-blocking operation/);
 		done();
 	});
 
-	it("should render unknown elements which are not registered as macros", done => {
+	it("should render unknown elements", done => {
 		renderFragment("custom-element", null, html => {
 			assert.equal(html, "<custom-element></custom-element>");
 			done();
 		});
 	});
 
-	it("should perform markup expansion for registered macros", done => {
-		renderFragment("site-index", { title: "hello world" }, html => {
+	it("should perform markup expansion for macros", done => {
+		renderFragment(SiteIndex, { title: "hello world" }, html => {
 			assert.equal(html, "<html>" +
 					'<head><meta charset="utf-8"><title>hello world</title></head>' +
 					"<body><h1>hello world</h1><p>…</p></body>" +

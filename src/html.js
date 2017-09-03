@@ -171,7 +171,7 @@ function htmlEncode(str, attribute) {
 function abort(msg, value, tag) {
 	msg = `${msg}: \`${JSON.stringify(value)}\``;
 	if(tag) {
-		msg += ` - did you perhaps forget to register \`${tag}\` as a macro?`;
+		msg += ` - did you perhaps intend to use \`${tag}\` as a macro?`;
 	}
 	throw new Error(msg);
 }
