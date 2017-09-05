@@ -196,7 +196,7 @@ describe("HTML attributes", _ => {
 				let el = h("div", { title: value });
 				el(stream, true, noop);
 			};
-			assert.throws(fn, /invalid attribute value/);
+			assert.throws(fn, /invalid value for attribute/);
 			end();
 		});
 	});

@@ -138,15 +138,15 @@ function generateAttributes(params, tag) {
 			break;
 		// regular attributes
 		default:
-			if(typeof value === "number") {
-				value = value.toString();
-			} else if(!value.substr) {
-				abort("invalid attribute value", value, tag);
-			}
-
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 			if(/ |"|'|>|'|\/|=/.test(name)) {
 				abort("invalid attribute name", name, tag);
+			}
+
+			if(typeof value === "number") {
+				value = value.toString();
+			} else if(!value.substr) {
+				abort(`invalid value for attribute \`${name}\``, value, tag);
 			}
 
 			memo.push(`${name}="${htmlEncode(value, true)}"`);
