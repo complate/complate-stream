@@ -2,7 +2,7 @@ import generateHTML from "./html";
 import { flatCompact, noop } from "./util";
 
 // generates a pair of functions:
-// `render` serves as the API for the host environment
+// `renderView` serves as the API for the host environment
 // `registerView` allows `render` to reference registered macros by their name
 export default function renderer(doctype = "<!DOCTYPE html>") {
 	let macros = {};
@@ -26,7 +26,7 @@ export default function renderer(doctype = "<!DOCTYPE html>") {
 	// `fragment` is a boolean determining whether to omit doctype and layout
 	// `callback` is an optional function invoked upon conclusion - if provided,
 	// this activates non-blocking rendering
-	let render = (view, params, stream, fragment, callback) => {
+	let renderView = (view, params, stream, fragment, callback) => {
 		if(!fragment) {
 			stream.writeln(doctype);
 		}
@@ -52,7 +52,7 @@ export default function renderer(doctype = "<!DOCTYPE html>") {
 		}
 	};
 
-	return { render, registerView };
+	return { renderView, registerView };
 }
 
 // distinguishes regular tags from macros
