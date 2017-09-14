@@ -7,12 +7,12 @@ import { flatCompact, noop } from "./util";
 export default function renderer(doctype = "<!DOCTYPE html>") {
 	let macros = {};
 
-	let registerView = (macro, name = macro.name) => {
+	let registerView = (macro, name = macro.name, replace) => {
 		if(!name) {
 			throw new Error(`missing name for macro: \`${macro}\``);
 		}
 
-		if(macros[name]) {
+		if(macros[name] && !replace) {
 			throw new Error(`invalid macro name: \`${name}\` already registered`);
 		}
 		macros[name] = macro;
