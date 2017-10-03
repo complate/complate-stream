@@ -1,7 +1,7 @@
-import renderer, { createElement } from "./renderer";
+import Renderer, { createElement } from "./renderer";
 import generateHTML, { HTMLString } from "./html";
 
-export default renderer;
+export default Renderer;
 export { createElement, generateHTML, safe };
 
 function safe(str) {
