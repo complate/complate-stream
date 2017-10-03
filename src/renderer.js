@@ -1,24 +1,37 @@
 import generateHTML from "./html";
 import { flatCompact, noop } from "./util";
 
-// generates a pair of functions:
-// `renderView` serves as the API for the host environment
-// `registerView` allows `render` to reference registered macros by their name
-export default function renderer(doctype = "<!DOCTYPE html>") {
-	let macros = {};
+// distinguishes macros from regular tags
+export function createElement(element, params, ...children) {
+	/* eslint-disable indent */
+	return element.call ?
+			element(params, ...flatCompact(children)) :
+			generateHTML(element, params, ...children);
+	/* eslint-enable indent */
+}
 
-	let registerView = (macro, name = macro.name, replace) => {
+// a renderer typically provides the interface to the host environment
+// it maps views' string identifiers to the corresponding macros and supports
+// both HTML documents and fragments
+export default class Renderer {
+	constructor(doctype = "<!DOCTYPE html>") {
+		this._doctype = doctype;
+		this._macroRegistry = {};
+	}
+
+	registerView(macro, name = macro.name, replace) {
 		if(!name) {
 			throw new Error(`missing name for macro: \`${macro}\``);
 		}
 
+		let macros = this._macroRegistry;
 		if(macros[name] && !replace) {
 			throw new Error(`invalid macro name: \`${name}\` already registered`);
 		}
 		macros[name] = macro;
 
 		return name; // primarily for debugging
-	};
+	}
 
 	// `view` is either a macro function or a string identifying a registered macro
 	// `params` is a mutable key-value object which is passed to the respective macro
@@ -26,9 +39,9 @@ export default function renderer(doctype = "<!DOCTYPE html>") {
 	// `fragment` is a boolean determining whether to omit doctype and layout
 	// `callback` is an optional function invoked upon conclusion - if provided,
 	// this activates non-blocking rendering
-	let renderView = (view, params, stream, fragment, callback) => {
+	renderView(view, params, stream, { fragment } = {}, callback) {
 		if(!fragment) {
-			stream.writeln(doctype);
+			stream.writeln(this._doctype);
 		}
 
 		if(fragment) {
@@ -38,28 +51,17 @@ export default function renderer(doctype = "<!DOCTYPE html>") {
 			params._layout = false; // XXX: hacky? (e.g. might break due to immutability)
 		}
 
-		// resolve strings to corresponding macro
-		let macro = (view && view.substr) ? macros[view] : view;
+		// resolve string identifier to corresponding macro
+		let macro = (view && view.substr) ? this._macroRegistry[view] : view;
 		if(!macro) {
-			throw new Error(`unknown macro: \`${view}\``);
+			throw new Error(`unknown view macro: \`${view}\` is not registered`);
 		}
-		let element = createElement(macro, params);
 
+		let element = createElement(macro, params);
 		if(callback) { // non-blocking mode
 			element(stream, true, callback);
 		} else { // blocking mode
 			element(stream, false, noop);
 		}
 	};
-
-	return { renderView, registerView };
-}
-
-// distinguishes regular tags from macros
-export function createElement(element, params, ...children) {
-	/* eslint-disable indent */
-	return element.call ?
-			element(params, ...flatCompact(children)) :
-			generateHTML(element, params, ...children);
-	/* eslint-enable indent */
 }
