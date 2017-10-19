@@ -140,13 +140,14 @@ function generateAttributes(params, tag) {
 		default:
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 			if(/ |"|'|>|'|\/|=/.test(name)) {
-				abort("invalid attribute name", name, tag);
+				abort(`invalid HTML attribute name: ${repr(name)}`, tag);
 			}
 
 			if(typeof value === "number") {
 				value = value.toString();
 			} else if(!value.substr) {
-				abort(`invalid value for attribute \`${name}\``, value, tag);
+				abort(`invalid value for HTML attribute \`${name}\`: ` +
+						`${repr(value)} (expected string)`, tag);
 			}
 
 			memo.push(`${name}="${htmlEncode(value, true)}"`);
@@ -168,10 +169,13 @@ function htmlEncode(str, attribute) {
 	return res;
 }
 
-function abort(msg, value, tag) {
-	msg = `${msg}: \`${JSON.stringify(value)}\``;
+function abort(msg, tag) {
 	if(tag) {
 		msg += ` - did you perhaps intend to use \`${tag}\` as a macro?`;
 	}
 	throw new Error(msg);
+}
+
+function repr(value) {
+	return `\`${JSON.stringify(value)}\``;
 }

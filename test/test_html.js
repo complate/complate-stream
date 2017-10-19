@@ -180,7 +180,7 @@ describe("HTML attributes", _ => {
 				let el = h("div", attribs);
 				el(stream, true, noop);
 			};
-			assert.throws(fn, /invalid attribute name/);
+			assert.throws(fn, /invalid HTML attribute name/);
 			end();
 		});
 	});
@@ -196,7 +196,7 @@ describe("HTML attributes", _ => {
 				let el = h("div", { title: value });
 				el(stream, true, noop);
 			};
-			assert.throws(fn, /invalid value for attribute/);
+			assert.throws(fn, /invalid value for HTML attribute .* intend .* macro/);
 			end();
 		});
 	});
