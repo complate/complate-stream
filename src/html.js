@@ -54,7 +54,7 @@ export default function generateHTML(tag, params, ...children) {
 			let close = awaitAll(total, _ => {
 				closeElement(stream, tag, callback);
 			});
-			processChildren(stream, children, nonBlocking, close);
+			processChildren(stream, children, { nonBlocking, tag }, close);
 		}
 	};
 }
@@ -75,18 +75,19 @@ export function htmlEncode(str, attribute) {
 	return res;
 }
 
-function processChildren(stream, children, nonBlocking, callback) {
+function processChildren(stream, children, options, callback) {
 	let [child, ...remainder] = children;
 
 	if(child.call) {
+		let { nonBlocking } = options;
 		// distinguish regular element generators from deferred child elements
-		if(child.length !== 1) { // XXX: arity makes for a brittle heuristic
+		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
 			child(stream, { nonBlocking }, callback);
-		} else { // deferred
+		} else { // deferred child element
 			let fn = element => {
 				element(stream, { nonBlocking }, callback);
 				if(remainder.length) {
-					processChildren(stream, remainder, nonBlocking, callback);
+					processChildren(stream, remainder, options, callback);
 				}
 			};
 
@@ -102,7 +103,8 @@ function processChildren(stream, children, nonBlocking, callback) {
 				child(fn);
 
 				if(!nonBlocking && !invoked) {
-					throw new Error("invalid non-blocking operation detected");
+					let msg = "invalid non-blocking operation detected";
+					throw new Error(`${msg}: \`${options.tag}\``);
 				}
 			}
 			return; // `remainder` processing continues recursively
@@ -117,7 +119,7 @@ function processChildren(stream, children, nonBlocking, callback) {
 	}
 
 	if(remainder.length) {
-		processChildren(stream, remainder, nonBlocking, callback);
+		processChildren(stream, remainder, options, callback);
 	}
 }
 
