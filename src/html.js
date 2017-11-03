@@ -1,4 +1,4 @@
-import { awaitAll, flatCompact } from "./util";
+import { simpleLog, awaitAll, flatCompact } from "./util";
 
 // cf. https://www.w3.org/TR/html5/syntax.html#void-elements
 const VOID_ELEMENTS = {}; // poor man's set
@@ -37,8 +37,8 @@ const VOID_ELEMENTS = {}; // poor man's set
 //
 //   without this indirection, `<bar>` would be created before `<foo>`
 export default function generateHTML(tag, params, ...children) {
-	return (stream, nonBlocking, callback) => {
-		stream.write(`<${tag}${generateAttributes(params, tag)}>`);
+	return (stream, { nonBlocking, log = simpleLog }, callback) => {
+		stream.write(`<${tag}${generateAttributes(params, { log, tag })}>`);
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -81,10 +81,10 @@ function processChildren(stream, children, nonBlocking, callback) {
 	if(child.call) {
 		// distinguish regular element generators from deferred child elements
 		if(child.length !== 1) { // XXX: arity makes for a brittle heuristic
-			child(stream, nonBlocking, callback);
+			child(stream, { nonBlocking }, callback);
 		} else { // deferred
 			let fn = element => {
-				element(stream, nonBlocking, callback);
+				element(stream, { nonBlocking }, callback);
 				if(remainder.length) {
 					processChildren(stream, remainder, nonBlocking, callback);
 				}
@@ -130,7 +130,7 @@ function closeElement(stream, tag, callback) {
 	callback();
 };
 
-function generateAttributes(params, tag) {
+function generateAttributes(params, { log, tag }) {
 	if(!params) {
 		return "";
 	}
@@ -152,14 +152,16 @@ function generateAttributes(params, tag) {
 		default:
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 			if(/ |"|'|>|'|\/|=/.test(name)) {
-				abort(`invalid HTML attribute name: ${repr(name)}`, tag);
+				reportError(`invalid HTML attribute name: ${repr(name)}`, tag, log);
+				break;
 			}
 
 			if(typeof value === "number") {
 				value = value.toString();
 			} else if(!value.substr) {
-				abort(`invalid value for HTML attribute \`${name}\`: ` +
-						`${repr(value)} (expected string)`, tag);
+				reportError(`invalid value for HTML attribute \`${name}\`: ` +
+						`${repr(value)} (expected string)`, tag, log);
+				break;
 			}
 
 			memo.push(`${name}="${htmlEncode(value, true)}"`);
@@ -169,11 +171,8 @@ function generateAttributes(params, tag) {
 	return attribs.length === 0 ? "" : ` ${attribs.join(" ")}`;
 }
 
-function abort(msg, tag) {
-	if(tag) {
-		msg += ` - did you perhaps intend to use \`${tag}\` as a macro?`;
-	}
-	throw new Error(msg);
+function reportError(msg, tag, log) {
+	log("error", `${msg} - did you perhaps intend to use \`${tag}\` as a macro?`);
 }
 
 function repr(value) {

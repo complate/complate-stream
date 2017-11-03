@@ -43,7 +43,7 @@ export default class Renderer {
 	// `fragment` is a boolean determining whether to omit doctype and layout
 	// `callback` is an optional function invoked upon conclusion - if provided,
 	// this activates non-blocking rendering
-	renderView(view, params, stream, { fragment } = {}, callback) {
+	renderView(view, params, stream, { fragment, log } = {}, callback) {
 		if(!fragment) {
 			stream.writeln(this._doctype);
 		}
@@ -63,9 +63,9 @@ export default class Renderer {
 
 		let element = createElement(macro, params);
 		if(callback) { // non-blocking mode
-			element(stream, true, callback);
+			element(stream, { nonBlocking: true, log }, callback);
 		} else { // blocking mode
-			element(stream, false, noop);
+			element(stream, { nonBlocking: false, log }, noop);
 		}
 	};
 }

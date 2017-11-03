@@ -1,5 +1,9 @@
 const BLANKS = [undefined, null, false];
 
+export function simpleLog(type, msg) {
+	console.log(`[${type}] ${msg}`); // eslint-disable-line no-console
+}
+
 // returns a function that invokes `callback` only after having itself been
 // invoked `total` times
 export function awaitAll(total, callback) {

@@ -1,6 +1,6 @@
 /* global describe, it */
 import { SiteIndex, BlockingContainer, NonBlockingContainer } from "./macros";
-import WritableStream from "./stream";
+import { BufferedLogger, WritableStream } from "./util";
 import Renderer, { createElement } from "../src/renderer";
 import assert from "assert";
 
@@ -87,10 +87,37 @@ describe("renderer", _ => {
 		assert.throws(fn, /unknown view macro/);
 		done();
 	});
+
+	it("should support custom logging", done => {
+		let { renderer, stream } = setup(); // renderer defaults to HTML5
+
+		let logger = new BufferedLogger();
+		let options = { fragment: true, log: logger.log };
+		renderer.renderView(InvalidElement, null, stream, options, _ => {
+			assert.equal(stream.read(), "<div></div>");
+
+			let messages = logger.all;
+			assert.equal(messages.length, 2);
+
+			let msg = messages[0];
+			assert.equal(msg.type, "error");
+			assert(msg.message.includes("invalid HTML attribute name"));
+
+			msg = messages[1];
+			assert.equal(msg.type, "error");
+			assert(msg.message.includes("invalid value for HTML attribute"));
+
+			done();
+		});
+	});
 });
 
 function HTMLRoot() {
 	return createElement("html");
+}
+
+function InvalidElement() {
+	return createElement("div", { "foo=bar": "lipsum", baz: [1, 2, 3] });
 }
 
 function setup(doctype) {

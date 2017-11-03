@@ -1,5 +1,5 @@
 /* global describe, it */
-import WritableStream from "./stream";
+import { BufferedLogger, WritableStream } from "./util";
 import generateHTML, { HTMLString } from "../src/html";
 import { awaitAll, noop } from "../src/util";
 import assert from "assert";
@@ -10,7 +10,7 @@ describe("HTML rendering", _ => {
 	it("should generate a render function for streaming HTML elements", done => {
 		let stream = new WritableStream();
 		let el = generateHTML("body");
-		el(stream, true, _ => {
+		el(stream, { nonBlocking: true }, _ => {
 			let html = stream.read();
 
 			assert.equal(html, "<body></body>");
@@ -143,7 +143,7 @@ describe("HTML elements", _ => {
 		let el = h("p", null, "foo", deferred, "bar");
 
 		let stream = new WritableStream();
-		let fn = _ => el(stream, false, noop);
+		let fn = _ => el(stream, { nonBlocking: false }, noop);
 		assert.throws(fn, /invalid non-blocking operation/);
 		done();
 	});
@@ -166,38 +166,45 @@ describe("HTML attributes", _ => {
 		});
 	});
 
-	it("should balk at invalid attribute names", done => {
+	it("should report invalid attribute names", done => {
 		let names = [{}, "foo bar", 'foo"bar', "foo'bar", "foo/bar", "foo=bar"];
 
 		let end = awaitAll(names.length, done);
 
 		names.forEach(name => {
-			let stream = new WritableStream();
-			let fn = _ => {
-				let attribs = {};
-				attribs[name] = "lipsum";
+			let attribs = {};
+			attribs[name] = "lipsum";
+			let el = h("div", attribs);
 
-				let el = h("div", attribs);
-				el(stream, true, noop);
-			};
-			assert.throws(fn, /invalid HTML attribute name/);
-			end();
+			let logger = new BufferedLogger();
+			render(el, logger.log, html => {
+				let messages = logger.all;
+				let msg = messages[0];
+				assert.equal(messages.length, 1);
+				assert.equal(msg.type, "error");
+				assert(msg.message.includes("invalid HTML attribute name"));
+				end();
+			});
 		});
 	});
 
-	it("should balk at invalid attribute values", done => {
+	it("should report invalid attribute values", done => {
 		let values = [{}, [], new Date(), /.*/];
 
 		let end = awaitAll(values.length, done);
 
 		values.forEach(value => {
-			let stream = new WritableStream();
-			let fn = _ => {
-				let el = h("div", { title: value });
-				el(stream, true, noop);
-			};
-			assert.throws(fn, /invalid value for HTML attribute .* intend .* macro/);
-			end();
+			let el = h("div", { title: value });
+			let logger = new BufferedLogger();
+			render(el, logger.log, html => {
+				let messages = logger.all;
+				let msg = messages[0];
+				assert.equal(messages.length, 1);
+				assert.equal(msg.type, "error");
+				assert(msg.message.includes("invalid value for HTML attribute"));
+				assert(msg.message.includes("intend to use `div` as a macro?"));
+				end();
+			});
 		});
 	});
 });
@@ -225,10 +232,15 @@ describe("HTML encoding", _ => {
 	});
 });
 
-function render(element, callback) {
+function render(element, log, callback) {
+	if(callback === undefined) { // shift arguments
+		callback = log;
+		log = null;
+	}
+
 	let stream = new WritableStream();
-	element(stream, true, _ => {
+	element(stream, { nonBlocking: true, log }, _ => {
 		let html = stream.read();
-		callback && callback(html);
+		callback(html);
 	});
 }
