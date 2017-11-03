@@ -5,7 +5,7 @@ import { flatCompact, noop } from "./util";
 export function createElement(element, params, ...children) {
 	/* eslint-disable indent */
 	return element.call ?
-			element(params, ...flatCompact(children)) :
+			element(params === null ? {} : params, ...flatCompact(children)) :
 			generateHTML(element, params, ...children);
 	/* eslint-enable indent */
 }
