@@ -1,6 +1,7 @@
 /* global describe, it */
-import { BufferedLogger, WritableStream } from "./util";
+import { BufferedLogger } from "./util";
 import generateHTML, { HTMLString } from "../src/html";
+import BufferedStream from "../src/buffered-stream";
 import { awaitAll, noop } from "../src/util";
 import assert from "assert";
 
@@ -8,7 +9,7 @@ let h = generateHTML;
 
 describe("HTML rendering", _ => {
 	it("should generate a render function for streaming HTML elements", done => {
-		let stream = new WritableStream();
+		let stream = new BufferedStream();
 		let el = generateHTML("body");
 		el(stream, { nonBlocking: true }, _ => {
 			let html = stream.read();
@@ -142,7 +143,7 @@ describe("HTML elements", _ => {
 		};
 		let el = h("p", null, "foo", deferred, "bar");
 
-		let stream = new WritableStream();
+		let stream = new BufferedStream();
 		let fn = _ => el(stream, { nonBlocking: false }, noop);
 		assert.throws(fn, /invalid non-blocking operation/);
 		done();
@@ -238,7 +239,7 @@ function render(element, log, callback) {
 		log = null;
 	}
 
-	let stream = new WritableStream();
+	let stream = new BufferedStream();
 	element(stream, { nonBlocking: true, log }, _ => {
 		let html = stream.read();
 		callback(html);

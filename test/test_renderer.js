@@ -1,7 +1,8 @@
 /* global describe, it */
 import { SiteIndex, BlockingContainer, NonBlockingContainer } from "./macros";
-import { BufferedLogger, WritableStream } from "./util";
+import { BufferedLogger } from "./util";
 import Renderer, { createElement } from "../src/renderer";
+import BufferedStream from "../src/buffered-stream";
 import assert from "assert";
 
 describe("renderer", _ => {
@@ -123,6 +124,6 @@ function InvalidElement() {
 function setup(doctype) {
 	return {
 		renderer: new Renderer(doctype),
-		stream: new WritableStream()
+		stream: new BufferedStream()
 	};
 }
