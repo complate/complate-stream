@@ -17,6 +17,10 @@ export default class Renderer {
 	constructor(doctype = "<!DOCTYPE html>") {
 		this._doctype = doctype;
 		this._macroRegistry = {};
+
+		// bind methods for convenience
+		this.registerView.bind(this);
+		this.renderView.bind(this);
 	}
 
 	registerView(macro, name = macro.name, replace) {
