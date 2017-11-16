@@ -63,6 +63,18 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
+// adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
+export function htmlEncode(str, attribute) {
+	let res = str.replace(/&/g, "&amp;").
+		replace(/</g, "&lt;").
+		replace(/>/g, "&gt;");
+	if(attribute) {
+		res = res.replace(/"/g, "&quot;").
+			replace(/'/g, "&#x27;");
+	}
+	return res;
+}
+
 function processChildren(stream, children, nonBlocking, callback) {
 	let [child, ...remainder] = children;
 
@@ -155,18 +167,6 @@ function generateAttributes(params, tag) {
 		return memo;
 	}, []);
 	return attribs.length === 0 ? "" : ` ${attribs.join(" ")}`;
-}
-
-// adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
-function htmlEncode(str, attribute) {
-	let res = str.replace(/&/g, "&amp;").
-		replace(/</g, "&lt;").
-		replace(/>/g, "&gt;");
-	if(attribute) {
-		res = res.replace(/"/g, "&quot;").
-			replace(/'/g, "&#x27;");
-	}
-	return res;
 }
 
 function abort(msg, tag) {
