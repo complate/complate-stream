@@ -47,12 +47,18 @@ export default function generateHTML(tag, params, ...children) {
 		//   collections within JSX (`{items.map(item => <span>{item}</span>)}`)
 		children = flatCompact(children);
 
+		let isVoid = VOID_ELEMENTS[tag];
+		let closingTag = isVoid ? null : tag;
 		let total = children.length;
 		if(total === 0) {
-			closeElement(stream, tag, callback);
+			closeElement(stream, closingTag, callback);
 		} else {
+			if(isVoid) {
+				log("error", `void elements must not have children: \`<${tag}>\``);
+			}
+
 			let close = awaitAll(total, _ => {
-				closeElement(stream, tag, callback);
+				closeElement(stream, closingTag, callback);
 			});
 			processChildren(stream, children, { nonBlocking, tag }, close);
 		}
@@ -124,7 +130,7 @@ function processChildren(stream, children, options, callback) {
 }
 
 function closeElement(stream, tag, callback) {
-	if(!VOID_ELEMENTS[tag]) { // void elements must not have closing tags
+	if(tag !== null) { // void elements must not have closing tags
 		stream.write(`</${tag}>`);
 	}
 
@@ -154,14 +160,14 @@ function generateAttributes(params, { log, tag }) {
 		default:
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 			if(/ |"|'|>|'|\/|=/.test(name)) {
-				reportError(`invalid HTML attribute name: ${repr(name)}`, tag, log);
+				reportAttribError(`invalid HTML attribute name: ${repr(name)}`, tag, log);
 				break;
 			}
 
 			if(typeof value === "number") {
 				value = value.toString();
 			} else if(!value.substr) {
-				reportError(`invalid value for HTML attribute \`${name}\`: ` +
+				reportAttribError(`invalid value for HTML attribute \`${name}\`: ` +
 						`${repr(value)} (expected string)`, tag, log);
 				break;
 			}
@@ -173,7 +179,7 @@ function generateAttributes(params, { log, tag }) {
 	return attribs.length === 0 ? "" : ` ${attribs.join(" ")}`;
 }
 
-function reportError(msg, tag, log) {
+function reportAttribError(msg, tag, log) {
 	log("error", `${msg} - did you perhaps intend to use \`${tag}\` as a macro?`);
 }
 

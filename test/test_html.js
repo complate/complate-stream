@@ -60,6 +60,21 @@ describe("HTML elements", _ => {
 		});
 	});
 
+	it("should report invalid children for void elements", done => {
+		let el = h("input", null,
+				h("span", null, "lipsum"));
+
+		let logger = new BufferedLogger();
+		render(el, logger.log, html => {
+			let messages = logger.all;
+			let msg = messages[0];
+			assert.equal(messages.length, 1);
+			assert.equal(msg.type, "error");
+			assert(msg.message.includes("void elements must not have children"));
+			done();
+		});
+	});
+
 	it("should support both elements and strings/numbers as child elements", done => {
 		let el = h("p", null,
 				h("em", null, "hello"),
