@@ -61,16 +61,20 @@ describe("HTML elements", _ => {
 	});
 
 	it("should report invalid children for void elements", done => {
-		let el = h("input", null,
-				h("span", null, "lipsum"));
+		let el = h("div", null,
+				h("p", null,
+						h("input", null,
+								h("span", null, "lipsum"))));
 
 		let logger = new BufferedLogger();
 		render(el, logger.log, html => {
-			let messages = logger.all;
-			let msg = messages[0];
-			assert.equal(messages.length, 1);
-			assert.equal(msg.type, "error");
-			assert(msg.message.includes("void elements must not have children"));
+			assertLog(logger.all, [{
+				type: "error",
+				substr: "void elements must not have children"
+			}]);
+
+			assert.equal(html, "<div><p><input><span>lipsum</span></p></div>");
+
 			done();
 		});
 	});
@@ -194,11 +198,11 @@ describe("HTML attributes", _ => {
 
 			let logger = new BufferedLogger();
 			render(el, logger.log, html => {
-				let messages = logger.all;
-				let msg = messages[0];
-				assert.equal(messages.length, 1);
-				assert.equal(msg.type, "error");
-				assert(msg.message.includes("invalid HTML attribute name"));
+				assertLog(logger.all, [{
+					type: "error",
+					substr: "invalid HTML attribute name"
+				}]);
+
 				end();
 			});
 		});
@@ -213,12 +217,14 @@ describe("HTML attributes", _ => {
 			let el = h("div", { title: value });
 			let logger = new BufferedLogger();
 			render(el, logger.log, html => {
-				let messages = logger.all;
-				let msg = messages[0];
-				assert.equal(messages.length, 1);
-				assert.equal(msg.type, "error");
-				assert(msg.message.includes("invalid value for HTML attribute"));
-				assert(msg.message.includes("intend to use `div` as a macro?"));
+				assertLog(logger.all, [{
+					type: "error",
+					/* eslint-disable indent */
+					substr: ["invalid value for HTML attribute",
+							"intend to use `div` as a macro?"]
+					/* eslint-enable indent */
+				}]);
+
 				end();
 			});
 		});
@@ -247,6 +253,21 @@ describe("HTML encoding", _ => {
 		});
 	});
 });
+
+function assertLog(actual, expected) {
+	assert.equal(actual.length, expected.length);
+	actual.forEach((msg, i) => {
+		let { type, substr } = expected[i];
+		if(!substr.pop) {
+			substr = [substr];
+		}
+
+		assert.equal(msg.type, type, `unexpected log-entry type: ${msg.type}`);
+		substr.forEach(str => {
+			assert(msg.message.includes(str), `missing log entry: "${str}"`);
+		});
+	});
+}
 
 function render(element, log, callback) {
 	if(callback === undefined) { // shift arguments

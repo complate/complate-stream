@@ -60,7 +60,7 @@ export default function generateHTML(tag, params, ...children) {
 			let close = awaitAll(total, _ => {
 				closeElement(stream, closingTag, callback);
 			});
-			processChildren(stream, children, { nonBlocking, tag }, close);
+			processChildren(stream, children, { nonBlocking, log, tag }, close);
 		}
 	};
 }
@@ -85,13 +85,13 @@ function processChildren(stream, children, options, callback) {
 	let [child, ...remainder] = children;
 
 	if(child.call) {
-		let { nonBlocking } = options;
+		let { nonBlocking, log } = options;
 		// distinguish regular element generators from deferred child elements
 		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-			child(stream, { nonBlocking }, callback);
+			child(stream, { nonBlocking, log }, callback);
 		} else { // deferred child element
 			let fn = element => {
-				element(stream, { nonBlocking }, callback);
+				element(stream, { nonBlocking, log }, callback);
 				if(remainder.length) {
 					processChildren(stream, remainder, options, callback);
 				}
