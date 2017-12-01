@@ -229,6 +229,23 @@ describe("HTML attributes", _ => {
 			});
 		});
 	});
+
+	it("should report duplicate IDs", done => {
+		let el = h("div", { id: "foo" },
+				h("span", { id: "foo" }));
+
+		let logger = new BufferedLogger();
+		render(el, logger.log, html => {
+			assertLog(logger.all, [{
+				type: "error",
+				substr: "duplicate HTML element ID"
+			}]);
+
+			assert.equal(html, '<div id="foo"><span id="foo"></span></div>');
+
+			done();
+		});
+	});
 });
 
 describe("HTML encoding", _ => {

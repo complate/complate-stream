@@ -37,8 +37,8 @@ const VOID_ELEMENTS = {}; // poor man's set
 //
 //   without this indirection, `<bar>` would be created before `<foo>`
 export default function generateHTML(tag, params, ...children) {
-	return (stream, { nonBlocking, log = simpleLog }, callback) => {
-		stream.write(`<${tag}${generateAttributes(params, { log, tag })}>`);
+	return (stream, { nonBlocking, log = simpleLog, idRegistry = {} }, callback) => {
+		stream.write(`<${tag}${generateAttributes(params, { log, idRegistry, tag })}>`);
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -60,7 +60,8 @@ export default function generateHTML(tag, params, ...children) {
 			let close = awaitAll(total, _ => {
 				closeElement(stream, closingTag, callback);
 			});
-			processChildren(stream, children, { nonBlocking, log, tag }, close);
+			processChildren(stream, children,
+					{ nonBlocking, log, idRegistry, tag }, close);
 		}
 	};
 }
@@ -85,13 +86,14 @@ function processChildren(stream, children, options, callback) {
 	let [child, ...remainder] = children;
 
 	if(child.call) {
-		let { nonBlocking, log } = options;
+		let { nonBlocking, log, idRegistry } = options;
+		let generatorOptions = { nonBlocking, log, idRegistry };
 		// distinguish regular element generators from deferred child elements
 		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-			child(stream, { nonBlocking, log }, callback);
+			child(stream, generatorOptions, callback);
 		} else { // deferred child element
 			let fn = element => {
-				element(stream, { nonBlocking, log }, callback);
+				element(stream, generatorOptions, callback);
 				if(remainder.length) {
 					processChildren(stream, remainder, options, callback);
 				}
@@ -138,9 +140,17 @@ function closeElement(stream, tag, callback) {
 	callback();
 };
 
-function generateAttributes(params, { log, tag }) {
+function generateAttributes(params, { log, idRegistry, tag }) {
 	if(!params) {
 		return "";
+	}
+
+	if(idRegistry && params.id !== undefined) {
+		let { id } = params;
+		if(idRegistry[id]) {
+			log("error", `duplicate HTML element ID: ${repr(params.id)}`);
+		}
+		idRegistry[id] = true;
 	}
 
 	let attribs = Object.keys(params).reduce((memo, name) => {
