@@ -9,36 +9,35 @@ const VOID_ELEMENTS = {}; // poor man's set
 	VOID_ELEMENTS[tag] = true;
 });
 
-// generates an "element generator" function which writes the respective HTML
-// element(s) to an output stream
-// that element generator expects three arguments: a writable stream¹, a flag
-// permitting non-blocking I/O and a callback - the latter is invoked upon
-// conclusion, without any arguments²
+// generates an "element generator" function which serves as a placeholder and,
+// when invoked, writes the respective HTML to an output stream
 //
-// this indirection is necessary because this function implements the signature
-// expected by JSX, so not only do we need to inject additional arguments, we
-// to defer element creation in order to re-align the invocation order³ - thus
-// element generators operate as placeholders which are unwrapped later
+// such an element generator expects three arguments:
+// * a writable stream (an object with methods `#write`, `#writeln` and `#flush`)
+// * an options object:
+//     * `nonBlocking`, if truthy, permits non-blocking I/O
+//     * `log` is a logging function with the signature `(type, message)`
+// * a callback function which is invoked upon conclusion, without any arguments
 //
-// ¹ an object with methods `#write`, `#writeln` and `#flush`
+// the indirection via element generators serves two purposes: since this
+// function implements the signature expected by JSX (which is essentially a DSL
+// for function invocations), we need to inject additional arguments by other
+// means - plus we need to defer element creation in order to ensure proper
+// order and nesting:
 //
-// ² TODO: error handling
+//     <body id="top">
+//         <h1>hello world</h1>
+//     </body>
 //
-// ³ JSX is essentially a DSL for function invocations:
+// turns into
 //
-//     <foo alpha="hello" bravo="world">
-//         <bar>…</bar>
-//     </foo>
+//     createElement("body", { id: "top" },
+//             createElement("h1", null, "hello world"));
 //
-//   turns into
-//
-//     createElement("foo", { alpha: "hello", bravo: "world" },
-//             createElement("bar", null, "…"));
-//
-//   without this indirection, `<bar>` would be created before `<foo>`
+// without a thunk-style indirection, `<h1>` would be created before `<body>`
 export default function generateHTML(tag, params, ...children) {
-	return (stream, { nonBlocking, log = simpleLog, idRegistry = {} }, callback) => {
-		stream.write(`<${tag}${generateAttributes(params, { log, idRegistry, tag })}>`);
+	return (stream, { nonBlocking, log = simpleLog, _idRegistry = {} }, callback) => {
+		stream.write(`<${tag}${generateAttributes(params, { log, _idRegistry, tag })}>`);
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -61,7 +60,7 @@ export default function generateHTML(tag, params, ...children) {
 				closeElement(stream, closingTag, callback);
 			});
 			processChildren(stream, children,
-					{ nonBlocking, log, idRegistry, tag }, close);
+					{ nonBlocking, log, _idRegistry, tag }, close);
 		}
 	};
 }
@@ -86,8 +85,8 @@ function processChildren(stream, children, options, callback) {
 	let [child, ...remainder] = children;
 
 	if(child.call) {
-		let { nonBlocking, log, idRegistry } = options;
-		let generatorOptions = { nonBlocking, log, idRegistry };
+		let { nonBlocking, log, _idRegistry } = options;
+		let generatorOptions = { nonBlocking, log, _idRegistry };
 		// distinguish regular element generators from deferred child elements
 		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
 			child(stream, generatorOptions, callback);
@@ -140,17 +139,17 @@ function closeElement(stream, tag, callback) {
 	callback();
 };
 
-function generateAttributes(params, { log, idRegistry, tag }) {
+function generateAttributes(params, { log, _idRegistry, tag }) {
 	if(!params) {
 		return "";
 	}
 
-	if(idRegistry && params.id !== undefined) {
+	if(_idRegistry && params.id !== undefined) {
 		let { id } = params;
-		if(idRegistry[id]) {
+		if(_idRegistry[id]) {
 			log("error", `duplicate HTML element ID: ${repr(params.id)}`);
 		}
-		idRegistry[id] = true;
+		_idRegistry[id] = true;
 	}
 
 	let attribs = Object.keys(params).reduce((memo, name) => {

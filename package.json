@@ -1,7 +1,7 @@
 {
 	"name": "complate-stream",
 	"version": "0.14.2",
-	"description": "complate's core library for server-side rendering via JSX",
+	"description": "complate's core library for rendering HTML via JSX",
 	"author": "FND",
 	"license": "Apache-2.0",
 	"homepage": "https://github.com/complate/complate-stream",
