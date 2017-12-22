@@ -269,6 +269,16 @@ describe("HTML encoding", _ => {
 			done();
 		});
 	});
+
+	it("should allow big sets of child elements", done => {
+		let items = Array.apply(null, Array(10000)).map(function (_, i) {
+			return h("li", null, i);
+		});
+		render(h("ul", null, items), html => {
+			assert(html.includes("<li>9999</li></ul>"));
+			done();
+		});
+	});
 });
 
 function assertLog(actual, expected) {
