@@ -83,52 +83,49 @@ export function htmlEncode(str, attribute) {
 }
 
 function processChildren(stream, children, options, callback) {
-	let [child, ...remainder] = children;
-
-	if(child.call) {
-		let { nonBlocking, log, idRegistry } = options;
-		let generatorOptions = { nonBlocking, log, idRegistry };
-		// distinguish regular element generators from deferred child elements
-		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-			child(stream, generatorOptions, callback);
-		} else { // deferred child element
-			let fn = element => {
-				element(stream, generatorOptions, callback);
-				if(remainder.length) {
-					processChildren(stream, remainder, options, callback);
-				}
-			};
-
-			if(nonBlocking) {
-				child(fn);
-			} else { // ensure deferred child element is synchronous
-				let invoked = false;
-				let _fn = fn;
-				fn = function() {
-					invoked = true;
-					return _fn.apply(null, arguments);
+	for(let i = 0; i < children.length; i++) {
+		let child = children[i];
+		if(child.call) {
+			let { nonBlocking, log, idRegistry } = options;
+			let generatorOptions = { nonBlocking, log, idRegistry };
+			// distinguish regular element generators from deferred child elements
+			if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
+				child(stream, generatorOptions, callback);
+			} else { // deferred child element
+				let fn = element => {
+					element(stream, generatorOptions, callback);
+					if(i + 1 < children.length) {
+						processChildren(stream, children.slice(i + 1), options, callback);
+					}
 				};
-				child(fn);
 
-				if(!nonBlocking && !invoked) {
-					let msg = "invalid non-blocking operation detected";
-					throw new Error(`${msg}: \`${options.tag}\``);
+				if(nonBlocking) {
+					child(fn);
+				} else { // ensure deferred child element is synchronous
+					let invoked = false;
+					let _fn = fn;
+					fn = function() {
+						invoked = true;
+						return _fn.apply(null, arguments);
+					};
+					child(fn);
+
+					if(!nonBlocking && !invoked) {
+						let msg = "invalid non-blocking operation detected";
+						throw new Error(`${msg}: \`${options.tag}\``);
+					}
 				}
+				break; // `remainder` processing continues recursively
 			}
-			return; // `remainder` processing continues recursively
+		} else {
+			/* eslint-disable indent */
+			let content = child instanceof HTMLString ? child.value :
+					htmlEncode(child.toString());
+			/* eslint-enable indent */
+			stream.write(content);
+			callback();
 		}
-	} else {
-		/* eslint-disable indent */
-		let content = child instanceof HTMLString ? child.value :
-				htmlEncode(child.toString());
-		/* eslint-enable indent */
-		stream.write(content);
-		callback();
-	}
-
-	if(remainder.length) {
-		processChildren(stream, remainder, options, callback);
-	}
+	};
 }
 
 function closeElement(stream, tag, callback) {
