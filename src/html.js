@@ -85,48 +85,53 @@ function processChildren(stream, children, options, callback) {
 	for(let i = 0; i < children.length; i++) {
 		let child = children[i];
 
-		if(child.call) {
-			let { nonBlocking, log, _idRegistry } = options;
-			let generatorOptions = { nonBlocking, log, _idRegistry };
-			// distinguish regular element generators from deferred child elements
-			if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-				child(stream, generatorOptions, callback);
-			} else { // deferred child element
-				let fn = element => {
-					element(stream, generatorOptions, callback);
-					let next = i + 1;
-					if(next < children.length) {
-						let remainder = children.slice(next);
-						processChildren(stream, remainder, options, callback);
-					}
-				};
-
-				if(nonBlocking) {
-					child(fn);
-				} else { // ensure deferred child element is synchronous
-					let invoked = false;
-					let _fn = fn;
-					fn = function() {
-						invoked = true;
-						return _fn.apply(null, arguments);
-					};
-					child(fn);
-
-					if(!nonBlocking && !invoked) {
-						let msg = "invalid non-blocking operation detected";
-						throw new Error(`${msg}: \`${options.tag}\``);
-					}
-				}
-				break; // `remainder` processing continues recursively above
-			}
-		} else {
-			/* eslint-disable indent */
-			let content = child instanceof HTMLString ? child.value :
-					htmlEncode(child.toString());
-			/* eslint-enable indent */
+		if(!child.call) { // leaf node(s)
+			let content = child instanceof HTMLString ? // eslint-disable-next-line indent
+					child.value : htmlEncode(child.toString());
 			stream.write(content);
 			callback();
+			continue;
 		}
+
+		let { nonBlocking, log, _idRegistry } = options;
+		let generatorOptions = { nonBlocking, log, _idRegistry };
+		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
+			child(stream, generatorOptions, callback);
+			continue;
+		}
+
+		// deferred child element
+		let fn = element => {
+			element(stream, generatorOptions, callback);
+			let next = i + 1;
+			if(next < children.length) {
+				let remainder = children.slice(next);
+				processChildren(stream, remainder, options, callback);
+			}
+		};
+
+		if(!nonBlocking) { // ensure deferred child element is synchronous
+			let invoked = false;
+
+			let _fn = fn;
+			fn = function() {
+				invoked = true;
+				return _fn.apply(null, arguments);
+			};
+
+			let _child = child;
+			child = function() {
+				let res = _child.apply(null, arguments);
+				if(!invoked) {
+					let msg = "invalid non-blocking operation detected";
+					throw new Error(`${msg}: \`${options.tag}\``);
+				}
+				return res;
+			};
+		}
+
+		child(fn);
+		break; // `remainder` processing continues recursively above
 	}
 }
 
