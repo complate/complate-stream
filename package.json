@@ -13,8 +13,8 @@
 		"url": "https://github.com/complate/complate-stream/issues"
 	},
 	"scripts": {
-		"start": "npm-run-all --parallel lint test",
-		"test": "mocha -r @std/esm test/test_*.js",
+		"test": "npm-run-all --parallel lint test:all",
+		"test:all": "mocha -r @std/esm test/test_*.js",
 		"lint": "eslint --cache *.js src test && echo ✓"
 	},
 	"main": "src/index.js",
