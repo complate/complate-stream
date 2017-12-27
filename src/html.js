@@ -97,26 +97,29 @@ function processChildren(stream, children, startIndex, options, callback) {
 			continue;
 		}
 
+		let continuation = _ => {
+			callback();
+
+			let next = i + 1;
+			if(next < children.length) {
+				processChildren(stream, children, next, options, callback);
+			}
+		};
+
 		let { nonBlocking, log, _idRegistry } = options;
 		let generatorOptions = { nonBlocking, log, _idRegistry };
 		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-			child(stream, generatorOptions, callback);
-			continue;
+			if(nonBlocking) {
+				child(stream, generatorOptions, continuation);
+				break; // remainder processing continues recursively above
+			} else {
+				child(stream, generatorOptions, callback);
+				continue;
+			}
 		}
 
 		// deferred child element (a user-supplied function, invoked with a
 		// continuation callback)
-		let continuation = element => {
-			element(stream, generatorOptions, _ => {
-				callback();
-
-				let next = i + 1;
-				if(next < children.length) {
-					processChildren(stream, children, next, options, callback);
-				}
-			});
-		};
-
 		if(!nonBlocking) { // ensure deferred child element is synchronous
 			let invoked = false;
 
@@ -137,7 +140,9 @@ function processChildren(stream, children, startIndex, options, callback) {
 			};
 		}
 
-		child(continuation);
+		child(element => {
+			element(stream, generatorOptions, continuation);
+		});
 		break; // remainder processing continues recursively above
 	}
 }
