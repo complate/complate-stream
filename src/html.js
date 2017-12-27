@@ -98,7 +98,12 @@ function processChildren(stream, children, options, callback) {
 			let next = i + 1;
 			if(next < children.length) {
 				let remainder = children.slice(next);
-				processChildren(stream, remainder, options, callback);
+				if(nonBlocking) {
+					process.nextTick(_ =>
+						processChildren(stream, remainder, options, callback));
+				} else {
+					processChildren(stream, remainder, options, callback);
+				}
 			}
 			return res;
 		};
