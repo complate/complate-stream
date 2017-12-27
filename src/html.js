@@ -104,20 +104,24 @@ function processChildren(stream, children, startIndex, options, callback) {
 			continue;
 		}
 
-		// deferred child element
-		let fn = element => {
-			element(stream, generatorOptions, callback);
-			let next = i + 1;
-			if(next < children.length) {
-				processChildren(stream, children, next, options, callback);
-			}
+		// deferred child element (a user-supplied function, invoked with a
+		// continuation callback)
+		let continuation = element => {
+			element(stream, generatorOptions, _ => {
+				callback();
+
+				let next = i + 1;
+				if(next < children.length) {
+					processChildren(stream, children, next, options, callback);
+				}
+			});
 		};
 
 		if(!nonBlocking) { // ensure deferred child element is synchronous
 			let invoked = false;
 
-			let _fn = fn;
-			fn = function() {
+			let _fn = continuation;
+			continuation = function() {
 				invoked = true;
 				return _fn.apply(null, arguments);
 			};
@@ -133,7 +137,7 @@ function processChildren(stream, children, startIndex, options, callback) {
 			};
 		}
 
-		child(fn);
+		child(continuation);
 		break; // remainder processing continues recursively above
 	}
 }
