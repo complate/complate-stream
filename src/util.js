@@ -1,4 +1,4 @@
-const BLANKS = [undefined, null, false];
+let BLANKS = [undefined, null, false];
 
 export function simpleLog(type, msg) {
 	console.log(`[${type}] ${msg}`); // eslint-disable-line no-console

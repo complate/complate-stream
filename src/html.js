@@ -1,7 +1,7 @@
 import { simpleLog, awaitAll, flatCompact } from "./util";
 
 // cf. https://www.w3.org/TR/html5/syntax.html#void-elements
-const VOID_ELEMENTS = {}; // poor man's set
+let VOID_ELEMENTS = {}; // poor man's `Set`
 [
 	"area", "base", "br", "col", "embed", "hr", "img", "input", "keygen",
 	"link", "meta", "param", "source", "track", "wbr"
