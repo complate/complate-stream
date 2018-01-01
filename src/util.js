@@ -16,6 +16,16 @@ export function awaitAll(total, callback) {
 	};
 }
 
+let defer;
+if(typeof process !== "undefined") {
+	defer = fn => { process.nextTick(fn); };
+} else if(typeof setTimeout !== "undefined") {
+	defer = fn => { setTimeout(fn, 0); };
+} else {
+	defer = _ => { throw new Error("non-blocking mode unsupported"); };
+}
+export { defer };
+
 // flattens array while discarding blank values
 export function flatCompact(items) {
 	return items.reduce((memo, item) => {

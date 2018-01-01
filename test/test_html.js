@@ -202,6 +202,23 @@ describe("HTML elements", function() {
 			done();
 		});
 	});
+
+	it("should support large numbers of deferred child elements", function(done) {
+		this.timeout(3000);
+
+		let range = Array.apply(null, Array(10000));
+		let el = h("ul", null, range.map((_, i) => {
+			return callback => {
+				let el = h("li", null, i);
+				callback(el);
+			};
+		}));
+
+		render(el, html => {
+			assert(html.includes("<li>9999</li></ul>"));
+			done();
+		});
+	});
 });
 
 describe("HTML attributes", _ => {

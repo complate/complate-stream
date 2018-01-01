@@ -1,4 +1,4 @@
-import { simpleLog, awaitAll, flatCompact } from "./util";
+import { simpleLog, awaitAll, defer, flatCompact } from "./util";
 
 export let Fragment = {}; // poor man's symbol; used for virtual wrapper elements
 
@@ -102,7 +102,13 @@ function processChildren(stream, children, startIndex, options, callback) {
 
 			let next = i + 1;
 			if(next < children.length) {
-				processChildren(stream, children, next, options, callback);
+				if(nonBlocking) {
+					defer(_ => {
+						processChildren(stream, children, next, options, callback);
+					});
+				} else {
+					processChildren(stream, children, next, options, callback);
+				}
 			}
 		};
 
@@ -120,11 +126,15 @@ function processChildren(stream, children, startIndex, options, callback) {
 
 		// deferred child element (a user-supplied function, invoked with a
 		// continuation callback)
+		let fn = element => {
+			element(stream, generatorOptions, continuation);
+		};
+
 		if(!nonBlocking) { // ensure deferred child element is synchronous
 			let invoked = false;
 
-			let _fn = continuation;
-			continuation = function() {
+			let _fn = fn;
+			fn = function() {
 				invoked = true;
 				return _fn.apply(null, arguments);
 			};
@@ -140,9 +150,7 @@ function processChildren(stream, children, startIndex, options, callback) {
 			};
 		}
 
-		child(element => {
-			element(stream, generatorOptions, continuation);
-		});
+		child(fn);
 		break; // remainder processing continues recursively above
 	}
 }
