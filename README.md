@@ -3,6 +3,8 @@ complate-stream
 
 [complate](https://complate.org)'s core library for rendering HTML
 
+[![build status](https://travis-ci.org/complate/complate-stream.svg?branch=master)](https://travis-ci.org/complate/complate-stream)
+
 
 How It Works
 ------------
