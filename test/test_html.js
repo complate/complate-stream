@@ -30,7 +30,7 @@ describe("HTML rendering", _ => {
 	});
 });
 
-describe("HTML elements", _ => {
+describe("HTML elements", function() {
 	it("should support nested elements", done => {
 		let el = h("foo", null,
 				h("bar", null,
@@ -167,6 +167,20 @@ describe("HTML elements", _ => {
 		assert.throws(fn, /invalid non-blocking operation/);
 		done();
 	});
+
+	it("should support large numbers of child elements", function(done) {
+		this.timeout(3000);
+
+		let range = Array.apply(null, Array(10000));
+		let el = h("ul", null, range.map((_, i) => {
+			return h("li", null, i);
+		}));
+
+		render(el, html => {
+			assert(html.includes("<li>9999</li></ul>"));
+			done();
+		});
+	});
 });
 
 describe("HTML attributes", _ => {
@@ -266,18 +280,6 @@ describe("HTML encoding", _ => {
 
 		render(el, html => {
 			assert(html.includes("<p>foo <i>bar</i> baz</p>"));
-			done();
-		});
-	});
-
-	it("should support large numbers of child elements", done => {
-		let range = Array.apply(null, Array(10000));
-		let el = h("ul", null, range.map((_, i) => {
-			return h("li", null, i);
-		}));
-
-		render(el, html => {
-			assert(html.includes("<li>9999</li></ul>"));
 			done();
 		});
 	});
