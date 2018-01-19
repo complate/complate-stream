@@ -19,6 +19,7 @@
 		"lint": "eslint --cache *.js src ./test/*.js ./test/nashorn/*.js && echo ✓"
 	},
 	"main": "src/index.js",
+	"types": "src/index.d.ts",
 	"@std/esm": {
 		"esm": "all"
 	},
