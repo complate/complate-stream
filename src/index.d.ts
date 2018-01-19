@@ -20,8 +20,8 @@ declare type elementGenerator = (
 ) => void;
 
 // A macro
-interface StatelessFunctionalComponent<P> {
-	(props: P): elementGenerator;
+interface StatelessFunctionalComponent<T> {
+	(props: T): elementGenerator;
 }
 
 // ** Exports
