@@ -1,42 +1,23 @@
-export default Renderer;
-export { createElement, generateHTML, safe, htmlEncode };
-
-// ** TSX configuration
-
 declare global {
 	namespace JSX {
-		// This is needed for attribute type checking in custom components
-		interface Element extends StatelessFunctionalComponent<any> { }
+		interface Element extends StatelessFunctionalComponent<any> {}
 	}
 }
 
-// ** Types and interfaces
+export default Renderer;
+export { createElement, generateHTML, safe, htmlEncode };
 
-// Return value of createElement
-declare type elementGenerator = (
-	stream: Renderer.Stream,
-	nonBlocking: boolean,
-	callback: () => void
-) => void;
-
-// A macro
 interface StatelessFunctionalComponent<T> {
 	(props: T): elementGenerator;
 }
 
-// ** Exports
+declare type elementGenerator = (stream: Renderer.Stream, nonBlocking: boolean,
+		callback: () => void) => void;
 
-declare function createElement<T>(
-	element: string | StatelessFunctionalComponent<T>,
-	params: T,
-	...children
-): elementGenerator;
+declare function createElement<T>(element: string | StatelessFunctionalComponent<T>,
+		params: T, ...children): elementGenerator;
 
-declare function generateHTML(
-	tag: string,
-	params,
-	...children
-): elementGenerator;
+declare function generateHTML(tag: string, params, ...children): elementGenerator;
 
 declare function safe(str: string): Renderer.HTMLString;
 
@@ -45,19 +26,12 @@ declare function htmlEncode(str: string, attribute: boolean): string;
 declare class Renderer {
 	constructor(doctype?: string);
 
-	renderView(
-		view: elementGenerator | string,
-		params: Object,
-		stream: Renderer.Stream,
-		{ fragment: boolean }?,
-		callback?: () => void
-	): void;
+	renderView(view: elementGenerator | string, params: Object,
+			stream: Renderer.Stream, { fragment: boolean }?,
+			callback?: () => void): void;
 
-	registerView(
-		macro: () => elementGenerator,
-		name?: string,
-		replace?: boolean
-	): string;
+	registerView(macro: () => elementGenerator, name?: string,
+			replace?: boolean): string;
 }
 
 declare namespace Renderer {
@@ -66,7 +40,6 @@ declare namespace Renderer {
 		writeln(msg: string): void;
 		flush(): void;
 	}
-	export class HTMLString {
 
-	}
+	export class HTMLString {}
 }
