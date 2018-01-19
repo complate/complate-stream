@@ -1,3 +1,6 @@
+export default Renderer;
+export { createElement, safe };
+
 declare type elementGenerator = (
 	stream: Renderer.Stream,
 	nonBlocking: boolean,
@@ -44,10 +47,6 @@ declare namespace Renderer {
 
 	}
 }
-
-export default Renderer;
-
-export { createElement, safe };
 
 // Global definitions
 declare global {
