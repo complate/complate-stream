@@ -93,22 +93,35 @@ function processChildren(stream, children, options, callback) {
 			continue;
 		}
 
-		let { nonBlocking, log, _idRegistry } = options;
-		let generatorOptions = { nonBlocking, log, _idRegistry };
-		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
-			child(stream, generatorOptions, callback);
-			continue;
-		}
-
-		// deferred child element
-		let fn = element => {
-			element(stream, generatorOptions, callback);
+		let _callback = function() {
+			let res = callback.apply(null, arguments);
 			let next = i + 1;
 			if(next < children.length) {
 				let remainder = children.slice(next);
-				processChildren(stream, remainder, options, callback);
+				if(nonBlocking) {
+					process.nextTick(_ =>
+						processChildren(stream, remainder, options, callback));
+				} else {
+					processChildren(stream, remainder, options, callback);
+				}
 			}
+			return res;
 		};
+
+		let { nonBlocking, log, _idRegistry } = options;
+		let generatorOptions = { nonBlocking, log, _idRegistry };
+		if(child.length !== 1) { // element generator -- XXX: brittle heuristic (arity)
+			if(nonBlocking) {
+				child(stream, generatorOptions, _callback);
+				break;
+			} else {
+				child(stream, generatorOptions, callback);
+				continue;
+			}
+		}
+
+		// deferred child element
+		let fn = element => element(stream, generatorOptions, _callback);
 
 		if(!nonBlocking) { // ensure deferred child element is synchronous
 			let invoked = false;
