@@ -5,7 +5,7 @@ declare global {
 }
 
 export default Renderer;
-export { createElement, generateHTML, safe, htmlEncode };
+export { createElement, generateHTML, safe, htmlEncode, Fragment };
 
 interface StatelessFunctionalComponent<T> {
 	(props: T): elementGenerator;
@@ -13,6 +13,8 @@ interface StatelessFunctionalComponent<T> {
 
 declare type elementGenerator = (stream: Renderer.Stream, nonBlocking: boolean,
 		callback: () => void) => void;
+
+declare const Fragment;
 
 declare function createElement<T>(element: string | StatelessFunctionalComponent<T>,
 		params: T, ...children): elementGenerator;
