@@ -1,5 +1,7 @@
 import { simpleLog, awaitAll, flatCompact } from "./util";
 
+export let Fragment = {}; // poor man's symbol; used for virtual wrapper elements
+
 // cf. https://www.w3.org/TR/html5/syntax.html#void-elements
 let VOID_ELEMENTS = {}; // poor man's `Set`
 [
@@ -37,7 +39,9 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 // without a thunk-style indirection, `<h1>` would be created before `<body>`
 export default function generateHTML(tag, params, ...children) {
 	return (stream, { nonBlocking, log = simpleLog, _idRegistry = {} }, callback) => {
-		stream.write(`<${tag}${generateAttributes(params, { log, _idRegistry, tag })}>`);
+		if(tag !== Fragment) {
+			stream.write(`<${tag}${generateAttributes(params, { log, _idRegistry, tag })}>`);
+		}
 
 		// NB:
 		// * discarding blank values to avoid conditionals within JSX (passing
@@ -47,7 +51,7 @@ export default function generateHTML(tag, params, ...children) {
 		children = flatCompact(children);
 
 		let isVoid = VOID_ELEMENTS[tag];
-		let closingTag = isVoid ? null : tag;
+		let closingTag = (isVoid || tag === Fragment) ? null : tag;
 		let total = children.length;
 		if(total === 0) {
 			closeElement(stream, closingTag, callback);

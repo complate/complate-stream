@@ -1,6 +1,6 @@
 /* global describe, it */
 import { BufferedLogger } from "./util";
-import generateHTML, { HTMLString } from "../src/html";
+import generateHTML, { Fragment, HTMLString } from "../src/html";
 import BufferedStream from "../src/buffered-stream";
 import { awaitAll, noop } from "../src/util";
 import assert from "assert";
@@ -47,6 +47,17 @@ describe("HTML elements", function() {
 
 		render(el, html => {
 			assert.equal(html, "<custom-element></custom-element>");
+			done();
+		});
+	});
+
+	it("should support virtual fragment elements", done => {
+		let el = h(Fragment, null,
+				h("span", null, "lorem"),
+				h("span", null, "ipsum"));
+
+		render(el, html => {
+			assert.equal(html, "<span>lorem</span><span>ipsum</span>");
 			done();
 		});
 	});
