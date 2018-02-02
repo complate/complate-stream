@@ -11,4 +11,4 @@ before_install:
 addons:
     apt:
         packages:
-        - oracle-java8-set-default
+        - oracle-java9-installer

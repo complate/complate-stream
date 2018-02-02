@@ -1,6 +1,6 @@
 /* global describe, it */
 import { BufferedLogger } from "./util";
-import generateHTML, { HTMLString } from "../src/html";
+import generateHTML, { Fragment, HTMLString } from "../src/html";
 import BufferedStream from "../src/buffered-stream";
 import { awaitAll, noop } from "../src/util";
 import assert from "assert";
@@ -47,6 +47,17 @@ describe("HTML elements", function() {
 
 		render(el, html => {
 			assert.equal(html, "<custom-element></custom-element>");
+			done();
+		});
+	});
+
+	it("should support virtual fragment elements", done => {
+		let el = h(Fragment, null,
+				h("span", null, "lorem"),
+				h("span", null, "ipsum"));
+
+		render(el, html => {
+			assert.equal(html, "<span>lorem</span><span>ipsum</span>");
 			done();
 		});
 	});
@@ -130,10 +141,15 @@ describe("HTML elements", function() {
 			let el = h("em", null, "lipsum");
 			callback(el);
 		};
-		let el = h("p", null, "foo", deferred, "bar");
+		let el = h("div", null,
+				h("p", null,
+						h("span", null, "foo"),
+						deferred,
+						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			assert.equal(html,
+					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
 	});
@@ -145,10 +161,15 @@ describe("HTML elements", function() {
 				callback(el);
 			}, 10);
 		};
-		let el = h("p", null, "foo", deferred, "bar");
+		let el = h("div", null,
+				h("p", null,
+						h("span", null, "foo"),
+						deferred,
+						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			assert.equal(html,
+					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
 	});

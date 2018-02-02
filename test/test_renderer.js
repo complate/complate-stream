@@ -1,6 +1,7 @@
 /* global describe, it */
 import { SiteIndex, BlockingContainer, NonBlockingContainer } from "./macros";
 import { BufferedLogger } from "./util";
+import { Fragment } from "../src";
 import Renderer, { createElement } from "../src/renderer";
 import BufferedStream from "../src/buffered-stream";
 import assert from "assert";
@@ -29,6 +30,21 @@ describe("renderer", _ => {
 
 		renderer.renderView(HTMLRoot, null, stream, { fragment: true }, _ => {
 			assert.equal(stream.read(), "<html></html>");
+			done();
+		});
+	});
+
+	it("should support multiple root elements (via virtual fragment elements)", done => {
+		let { renderer, stream } = setup();
+
+		let view = () => {
+			return createElement(Fragment, null,
+					createElement("li", null, "foo"),
+					createElement("li", null, "bar"),
+					createElement("li", null, "baz"));
+		};
+		renderer.renderView(view, null, stream, { fragment: true }, _ => {
+			assert.equal(stream.read(), "<li>foo</li><li>bar</li><li>baz</li>");
 			done();
 		});
 	});
