@@ -130,10 +130,15 @@ describe("HTML elements", function() {
 			let el = h("em", null, "lipsum");
 			callback(el);
 		};
-		let el = h("p", null, "foo", deferred, "bar");
+		let el = h("div", null,
+				h("p", null,
+						h("span", null, "foo"),
+						deferred,
+						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			assert.equal(html,
+					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
 	});
@@ -145,10 +150,15 @@ describe("HTML elements", function() {
 				callback(el);
 			}, 10);
 		};
-		let el = h("p", null, "foo", deferred, "bar");
+		let el = h("div", null,
+				h("p", null,
+						h("span", null, "foo"),
+						deferred,
+						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html, "<p>foo<em>lipsum</em>bar</p>");
+			assert.equal(html,
+					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
 	});
@@ -280,18 +290,6 @@ describe("HTML encoding", _ => {
 
 		render(el, html => {
 			assert(html.includes("<p>foo <i>bar</i> baz</p>"));
-			done();
-		});
-	});
-
-	it("should support large numbers of child elements", done => {
-		let range = Array.apply(null, Array(10000));
-		let el = h("ul", null, range.map((_, i) => {
-			return h("li", null, i);
-		}));
-
-		render(el, html => {
-			assert(html.includes("<li>9999</li></ul>"));
 			done();
 		});
 	});

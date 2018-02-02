@@ -1,7 +1,8 @@
-let config = {
-	manifest: false,
-	bundles: [{
-		entryPoint: "./index.js",
+"use strict";
+
+module.exports = {
+	js: [{
+		source: "./index.js",
 		target: "./dist/bundle.js",
 		moduleName: "render",
 		transpiler: {
@@ -9,8 +10,4 @@ let config = {
 			jsx: { pragma: "createElement" }
 		}
 	}]
-};
-
-module.exports = {
-	js: config
 };
