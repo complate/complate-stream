@@ -26,6 +26,8 @@ interface StatelessFunctionalComponent<T> {
 
 // ** Exports
 
+declare const Fragment;
+
 declare function createElement<T>(
 	element: string | StatelessFunctionalComponent<T>,
 	params: T,
