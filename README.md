@@ -1,6 +1,8 @@
 complate-stream
 ===============
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/complate/complate-stream.svg)](https://greenkeeper.io/)
+
 [complate](https://complate.org)'s core library for rendering HTML
 
 [![package version](https://img.shields.io/npm/v/complate-stream.svg?style=flat)](https://www.npmjs.com/package/complate-stream)
