@@ -58,6 +58,16 @@ describe("renderer", _ => {
 		done();
 	});
 
+	it.skip("should support non-blocking mode", done => {
+		let { renderer, stream } = setup();
+
+		renderer.renderView(NonBlockingContainer, null, stream, { fragment: true }, _ => {
+			assert.equal(stream.read(),
+					"<div><p>…</p><p><i>lorem ipsum</i></p><p>…</p></div>");
+			done();
+		});
+	});
+
 	it("should detect non-blocking child elements in blocking mode", done => {
 		let { renderer, stream } = setup();
 

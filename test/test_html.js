@@ -1,5 +1,5 @@
 /* global describe, it */
-import { BufferedLogger } from "./util";
+import { BufferedLogger, range } from "./util";
 import generateHTML, { Fragment, HTMLString } from "../src/html";
 import BufferedStream from "../src/buffered-stream";
 import { awaitAll, noop } from "../src/util";
@@ -192,9 +192,24 @@ describe("HTML elements", function() {
 	it("should support large numbers of child elements", function(done) {
 		this.timeout(3000);
 
-		let range = Array.apply(null, Array(10000));
-		let el = h("ul", null, range.map((_, i) => {
+		let el = h("ul", null, range(10000).map((_, i) => {
 			return h("li", null, i);
+		}));
+
+		render(el, html => {
+			assert(html.includes("<li>9999</li></ul>"));
+			done();
+		});
+	});
+
+	it.skip("should support large numbers of deferred child elements", function(done) {
+		this.timeout(3000);
+
+		let el = h("ul", null, range(10000).map((_, i) => {
+			return callback => {
+				let el = h("li", null, i);
+				callback(el);
+			};
 		}));
 
 		render(el, html => {

@@ -1,3 +1,7 @@
+export function range(size) {
+	return Array.apply(null, Array(10000));
+}
+
 export class BufferedLogger {
 	constructor() {
 		this.reset();
