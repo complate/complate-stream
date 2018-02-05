@@ -17,7 +17,7 @@ describe("renderer", _ => {
 	});
 
 	it("should support custom doctypes", done => {
-		let { renderer, stream } = setup("<!DOCTYPE … XHTML …>");
+		let { renderer, stream } = setup({ doctype: "<!DOCTYPE … XHTML …>" });
 
 		renderer.renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
 			assert.equal(stream.read(), "<!DOCTYPE … XHTML …>\n<html></html>");
@@ -116,12 +116,11 @@ describe("renderer", _ => {
 	});
 
 	it("should support custom logging", done => {
-		let { renderer, stream } = setup(); // renderer defaults to HTML5
-
 		let logger = new BufferedLogger();
-		let options = { fragment: true, log: logger.log };
-		renderer.renderView(InvalidElement, null, stream, options, _ => {
-			assert.equal(stream.read(), "<div></div>");
+		let { renderer, stream } = setup({ log: logger.log });
+
+		renderer.renderView(InvalidElement, null, stream, {}, _ => {
+			assert.equal(stream.read(), "<!DOCTYPE html>\n<div></div>");
 
 			let messages = logger.all;
 			assert.equal(messages.length, 2);
@@ -147,9 +146,9 @@ function InvalidElement() {
 	return createElement("div", { "foo=bar": "lipsum", baz: [1, 2, 3] });
 }
 
-function setup(doctype) {
+function setup(options) {
 	return {
-		renderer: new Renderer(doctype),
+		renderer: new Renderer(options),
 		stream: new BufferedStream()
 	};
 }

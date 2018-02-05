@@ -2,7 +2,9 @@
 import Renderer, { createElement } from "../../src";
 import BufferedStream from "../../src/buffered-stream";
 
-let renderer = new Renderer("<!DOCTYPE html>");
+let renderer = new Renderer({
+	log: (type, msg) => print(`[${type}] ${msg}`)
+});
 
 renderer.registerView(function largeList() {
 	let range = Array.apply(null, Array(10000));

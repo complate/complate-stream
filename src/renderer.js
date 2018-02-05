@@ -13,9 +13,11 @@ export function createElement(element, params, ...children) {
 // a renderer typically provides the interface to the host environment
 // it maps views' string identifiers to the corresponding macros and supports
 // both HTML documents and fragments
+// `log` is an optional logging function with the signature `(type, message)`
 export default class Renderer {
-	constructor(doctype = "<!DOCTYPE html>") {
-		this._doctype = doctype;
+	constructor({ doctype = "<!DOCTYPE html>", log } = {}) {
+		this.doctype = doctype;
+		this.log = log;
 		this._macroRegistry = {};
 
 		// bind methods for convenience
@@ -43,9 +45,9 @@ export default class Renderer {
 	// `fragment` is a boolean determining whether to omit doctype and layout
 	// `callback` is an optional function invoked upon conclusion - if provided,
 	// this activates non-blocking rendering
-	renderView(view, params, stream, { fragment, log } = {}, callback) {
+	renderView(view, params, stream, { fragment } = {}, callback) {
 		if(!fragment) {
-			stream.writeln(this._doctype);
+			stream.writeln(this.doctype);
 		}
 
 		if(fragment) {
@@ -62,6 +64,7 @@ export default class Renderer {
 		}
 
 		let element = createElement(macro, params);
+		let { log } = this;
 		if(callback) { // non-blocking mode
 			element(stream, { nonBlocking: true, log }, callback);
 		} else { // blocking mode
