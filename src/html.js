@@ -40,7 +40,8 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 export default function generateHTML(tag, params, ...children) {
 	return (stream, { nonBlocking, log = simpleLog, _idRegistry = {} }, callback) => {
 		if(tag !== Fragment) {
-			stream.write(`<${tag}${generateAttributes(params, { log, _idRegistry, tag })}>`);
+			let attribs = generateAttributes(params, { tag, log, _idRegistry });
+			stream.write(`<${tag}${attribs}>`);
 		}
 
 		// NB:
@@ -64,7 +65,7 @@ export default function generateHTML(tag, params, ...children) {
 				closeElement(stream, closingTag, callback);
 			});
 			processChildren(stream, children, 0,
-					{ nonBlocking, log, _idRegistry, tag }, close);
+					{ tag, nonBlocking, log, _idRegistry }, close);
 		}
 	};
 }
@@ -147,7 +148,7 @@ function closeElement(stream, tag, callback) {
 	callback();
 };
 
-function generateAttributes(params, { log, _idRegistry, tag }) {
+function generateAttributes(params, { tag, log, _idRegistry }) {
 	if(!params) {
 		return "";
 	}

@@ -24,7 +24,7 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
-		"@std/esm": "^0.20.0",
+		"@std/esm": "^0.21.2",
 		"eslint-config-fnd": "^1.2.0",
 		"faucet-pipeline-jsx": "^1.0.0-beta.0",
 		"mocha": "^5.0.0",
