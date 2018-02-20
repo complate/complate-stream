@@ -10,8 +10,8 @@ export class BufferedLogger {
 		this.log = this.log.bind(this);
 	}
 
-	log(type, message) {
-		this.messages.push({ type, message });
+	log(level, message) {
+		this.messages.push({ level, message });
 	}
 
 	reset() {

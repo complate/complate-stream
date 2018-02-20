@@ -18,7 +18,9 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 // * a writable stream (an object with methods `#write`, `#writeln` and `#flush`)
 // * an options object:
 //     * `nonBlocking`, if truthy, permits non-blocking I/O
-//     * `log` is a logging function with the signature `(type, message)`
+//     * `log` is a logging function with the signature `(level, message)`; note
+//       that violations of HTML semantics are logged as "error", though user
+//       agents might still successfully render the respective document
 // * a callback function which is invoked upon conclusion, without any arguments
 //
 // the indirection via element generators serves two purposes: since this

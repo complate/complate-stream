@@ -13,7 +13,8 @@ export function createElement(element, params, ...children) {
 // a renderer typically provides the interface to the host environment
 // it maps views' string identifiers to the corresponding macros and supports
 // both HTML documents and fragments
-// `log` is an optional logging function with the signature `(type, message)`
+// `log` is an optional logging function with the signature `(level, message)`
+// (cf. `generateHTML`)
 export default class Renderer {
 	constructor({ doctype = "<!DOCTYPE html>", log } = {}) {
 		this.doctype = doctype;

@@ -80,7 +80,7 @@ describe("HTML elements", function() {
 		let logger = new BufferedLogger();
 		render(el, logger.log, html => {
 			assertLog(logger.all, [{
-				type: "error",
+				level: "error",
 				substr: "void elements must not have children"
 			}]);
 
@@ -249,7 +249,7 @@ describe("HTML attributes", _ => {
 			let logger = new BufferedLogger();
 			render(el, logger.log, html => {
 				assertLog(logger.all, [{
-					type: "error",
+					level: "error",
 					substr: "invalid HTML attribute name"
 				}]);
 
@@ -268,7 +268,7 @@ describe("HTML attributes", _ => {
 			let logger = new BufferedLogger();
 			render(el, logger.log, html => {
 				assertLog(logger.all, [{
-					type: "error",
+					level: "error",
 					/* eslint-disable indent */
 					substr: ["invalid value for HTML attribute",
 							"intend to use `div` as a macro?"]
@@ -287,7 +287,7 @@ describe("HTML attributes", _ => {
 		let logger = new BufferedLogger();
 		render(el, logger.log, html => {
 			assertLog(logger.all, [{
-				type: "error",
+				level: "error",
 				substr: "duplicate HTML element ID"
 			}]);
 
@@ -324,12 +324,12 @@ describe("HTML encoding", _ => {
 function assertLog(actual, expected) {
 	assert.equal(actual.length, expected.length);
 	actual.forEach((msg, i) => {
-		let { type, substr } = expected[i];
+		let { level, substr } = expected[i];
 		if(!substr.pop) {
 			substr = [substr];
 		}
 
-		assert.equal(msg.type, type, `unexpected log-entry type: ${msg.type}`);
+		assert.equal(msg.level, level, `unexpected log-entry level: ${msg.level}`);
 		substr.forEach(str => {
 			assert(msg.message.includes(str), `missing log entry: "${str}"`);
 		});
