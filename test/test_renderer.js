@@ -127,10 +127,12 @@ describe("renderer", _ => {
 
 			let msg = messages[0];
 			assert.equal(msg.level, "error");
+			assert(msg.message.startsWith("<InvalidElement> "));
 			assert(msg.message.includes("invalid HTML attribute name"));
 
 			msg = messages[1];
 			assert.equal(msg.level, "error");
+			assert(msg.message.startsWith("<InvalidElement> "));
 			assert(msg.message.includes("invalid value for HTML attribute"));
 
 			done();

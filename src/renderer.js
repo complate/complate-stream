@@ -59,13 +59,17 @@ export default class Renderer {
 		}
 
 		// resolve string identifier to corresponding macro
-		let macro = (view && view.substr) ? this._macroRegistry[view] : view;
+		let viewName = view && view.substr && view;
+		let macro = viewName ? this._macroRegistry[viewName] : view;
 		if(!macro) {
 			throw new Error(`unknown view macro: \`${view}\` is not registered`);
 		}
 
+		// augment logging with view context
+		let log = this.log && ((level, message) => this.log(level,
+				`<${viewName || macro.name}> ${message}`));
+
 		let element = createElement(macro, params);
-		let { log } = this;
 		if(callback) { // non-blocking mode
 			element(stream, { nonBlocking: true, log }, callback);
 		} else { // blocking mode
