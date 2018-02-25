@@ -22,8 +22,9 @@ export default class Renderer {
 		this._macroRegistry = {};
 
 		// bind methods for convenience
-		this.registerView.bind(this);
-		this.renderView.bind(this);
+		["registerView", "renderView"].forEach(meth => {
+			this[meth] = this[meth].bind(this);
+		});
 	}
 
 	registerView(macro, name = macro.name, replace) {

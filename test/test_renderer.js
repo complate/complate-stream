@@ -8,34 +8,34 @@ import assert from "assert";
 
 describe("renderer", _ => {
 	it("should generate a render function for streaming HTML documents", done => {
-		let { renderer, stream } = setup(); // renderer defaults to HTML5
+		let { renderView, stream } = setup(); // renderer defaults to HTML5
 
-		renderer.renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
+		renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
 			assert.equal(stream.read(), "<!DOCTYPE html>\n<html></html>");
 			done();
 		});
 	});
 
 	it("should support custom doctypes", done => {
-		let { renderer, stream } = setup({ doctype: "<!DOCTYPE … XHTML …>" });
+		let { renderView, stream } = setup({ doctype: "<!DOCTYPE … XHTML …>" });
 
-		renderer.renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
+		renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
 			assert.equal(stream.read(), "<!DOCTYPE … XHTML …>\n<html></html>");
 			done();
 		});
 	});
 
 	it("should omit doctype for HTML fragments", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
-		renderer.renderView(HTMLRoot, null, stream, { fragment: true }, _ => {
+		renderView(HTMLRoot, null, stream, { fragment: true }, _ => {
 			assert.equal(stream.read(), "<html></html>");
 			done();
 		});
 	});
 
 	it("should support multiple root elements (via virtual fragment elements)", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
 		let view = () => {
 			return createElement(Fragment, null,
@@ -43,25 +43,25 @@ describe("renderer", _ => {
 					createElement("li", null, "bar"),
 					createElement("li", null, "baz"));
 		};
-		renderer.renderView(view, null, stream, { fragment: true }, _ => {
+		renderView(view, null, stream, { fragment: true }, _ => {
 			assert.equal(stream.read(), "<li>foo</li><li>bar</li><li>baz</li>");
 			done();
 		});
 	});
 
 	it("should support blocking mode", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
-		renderer.renderView(BlockingContainer, null, stream, { fragment: true });
+		renderView(BlockingContainer, null, stream, { fragment: true });
 		assert.equal(stream.read(),
 				"<div><p>…</p><p><i>lorem<em>…</em>ipsum</i></p><p>…</p></div>");
 		done();
 	});
 
 	it.skip("should support non-blocking mode", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
-		renderer.renderView(NonBlockingContainer, null, stream, { fragment: true }, _ => {
+		renderView(NonBlockingContainer, null, stream, { fragment: true }, _ => {
 			assert.equal(stream.read(),
 					"<div><p>…</p><p><i>lorem ipsum</i></p><p>…</p></div>");
 			done();
@@ -69,18 +69,18 @@ describe("renderer", _ => {
 	});
 
 	it("should detect non-blocking child elements in blocking mode", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
-		let fn = _ => renderer.renderView(NonBlockingContainer, null, stream);
+		let fn = _ => renderView(NonBlockingContainer, null, stream);
 		assert.throws(fn, /invalid non-blocking operation/);
 		done();
 	});
 
 	it("should perform markup expansion for macros", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
 		/* eslint-disable indent */
-		renderer.renderView(SiteIndex, { title: "hello world" }, stream,
+		renderView(SiteIndex, { title: "hello world" }, stream,
 				{ fragment: true }, _ => {
 			assert.equal(stream.read(), "<html>" +
 					'<head><meta charset="utf-8"><title>hello world</title></head>' +
@@ -92,11 +92,11 @@ describe("renderer", _ => {
 	});
 
 	it("should resolve registered macros", done => {
-		let { renderer, stream } = setup();
+		let { registerView, renderView, stream } = setup();
 
-		renderer.registerView(SiteIndex);
+		registerView(SiteIndex);
 		/* eslint-disable indent */
-		renderer.renderView("SiteIndex", { title: "hello world" }, stream,
+		renderView("SiteIndex", { title: "hello world" }, stream,
 				{ fragment: true }, _ => {
 			assert.equal(stream.read(), "<html>" +
 					'<head><meta charset="utf-8"><title>hello world</title></head>' +
@@ -108,18 +108,18 @@ describe("renderer", _ => {
 	});
 
 	it("should balk at unregistered macros", done => {
-		let { renderer, stream } = setup();
+		let { renderView, stream } = setup();
 
-		let fn = _ => renderer.renderView("foo", null, stream);
+		let fn = _ => renderView("foo", null, stream);
 		assert.throws(fn, /unknown view macro/);
 		done();
 	});
 
 	it("should support custom logging", done => {
 		let logger = new BufferedLogger();
-		let { renderer, stream } = setup({ log: logger.log });
+		let { renderView, stream } = setup({ log: logger.log });
 
-		renderer.renderView(InvalidElement, null, stream, {}, _ => {
+		renderView(InvalidElement, null, stream, {}, _ => {
 			assert.equal(stream.read(), "<!DOCTYPE html>\n<div></div>");
 
 			let messages = logger.all;
@@ -149,8 +149,10 @@ function InvalidElement() {
 }
 
 function setup(options) {
+	let { registerView, renderView } = new Renderer(options);
 	return {
-		renderer: new Renderer(options),
+		registerView,
+		renderView,
 		stream: new BufferedStream()
 	};
 }
