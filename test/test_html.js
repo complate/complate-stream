@@ -312,6 +312,11 @@ describe("HTML encoding", _ => {
 	});
 
 	it("should allow for raw HTML, cicrumventing content encoding", done => {
+		assert.throws(_ => new HTMLString(), /invalid/);
+		assert.throws(_ => new HTMLString(null), /invalid/);
+		assert.throws(_ => new HTMLString(false), /invalid/);
+		assert.equal((new HTMLString("")).value, "");
+
 		let el = h("p", null, new HTMLString("foo <i>bar</i> baz"));
 
 		render(el, html => {

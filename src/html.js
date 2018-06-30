@@ -1,4 +1,4 @@
-import { simpleLog, awaitAll, flatCompact } from "./util";
+import { simpleLog, awaitAll, flatCompact, blank, repr } from "./util";
 
 export let Fragment = {}; // poor man's symbol; used for virtual wrapper elements
 
@@ -47,8 +47,8 @@ export default function generateHTML(tag, params, ...children) {
 		}
 
 		// NB:
-		// * discarding blank values to avoid conditionals within JSX (passing
-		//   `undefined`/`null`/`false` is much simpler)
+		// * discarding blank values (`undefined`, `null`, `false`) to allow for
+		//   conditionals with boolean operators (`condition && value`)
 		// * `children` might contain nested arrays due to the use of
 		//   collections within JSX (`{items.map(item => <span>{item}</span>)}`)
 		children = flatCompact(children);
@@ -73,6 +73,9 @@ export default function generateHTML(tag, params, ...children) {
 }
 
 export function HTMLString(str) {
+	if(blank(str) || !str.substr) {
+		throw new Error(`invalid ${repr(this.constructor.name, false)}: ${repr(str)}`);
+	}
 	this.value = str;
 }
 
@@ -201,8 +204,4 @@ function generateAttributes(params, { tag, log, _idRegistry }) {
 
 function reportAttribError(msg, tag, log) {
 	log("error", `${msg} - did you perhaps intend to use \`${tag}\` as a macro?`);
-}
-
-function repr(value) {
-	return `\`${JSON.stringify(value)}\``;
 }

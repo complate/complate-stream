@@ -19,11 +19,17 @@ export function awaitAll(total, callback) {
 // flattens array while discarding blank values
 export function flatCompact(items) {
 	return items.reduce((memo, item) => {
-		/* eslint-disable indent */
-		return BLANKS.indexOf(item) !== -1 ? memo :
+		return BLANKS.indexOf(item) !== -1 ? memo : // eslint-disable-next-line indent
 				memo.concat(item.pop ? flatCompact(item) : item);
-		/* eslint-enable indent */
 	}, []);
+}
+
+export function blank(value) {
+	return BLANKS.indexOf(value) !== -1;
+}
+
+export function repr(value, jsonify = true) {
+	return `\`${jsonify ? JSON.stringify(value) : value}\``;
 }
 
 export function noop() {}
