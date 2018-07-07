@@ -151,7 +151,7 @@ function closeElement(stream, tag, callback) {
 
 	stream.flush();
 	callback();
-};
+}
 
 function generateAttributes(params, { tag, log, _idRegistry }) {
 	if(!params) {

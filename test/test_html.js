@@ -315,6 +315,7 @@ describe("HTML encoding", _ => {
 		assert.throws(_ => new HTMLString(), /invalid/);
 		assert.throws(_ => new HTMLString(null), /invalid/);
 		assert.throws(_ => new HTMLString(false), /invalid/);
+		assert.throws(_ => new HTMLString({}), /invalid/);
 		assert.equal((new HTMLString("")).value, "");
 
 		let el = h("p", null, new HTMLString("foo <i>bar</i> baz"));

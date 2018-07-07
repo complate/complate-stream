@@ -76,5 +76,5 @@ export default class Renderer {
 		} else { // blocking mode
 			element(stream, { nonBlocking: false, log }, noop);
 		}
-	};
+	}
 }
