@@ -6,15 +6,16 @@ import { awaitAll, noop } from "../src/util";
 import assert from "assert";
 
 let h = generateHTML;
+let assertSame = assert.strictEqual;
 
 describe("HTML rendering", _ => {
 	it("should generate a render function for streaming HTML elements", done => {
 		let stream = new BufferedStream();
-		let el = generateHTML("body");
+		let el = h("body");
 		el(stream, { nonBlocking: true }, _ => {
 			let html = stream.read();
 
-			assert.equal(html, "<body></body>");
+			assertSame(html, "<body></body>");
 			done();
 		});
 	});
@@ -24,7 +25,7 @@ describe("HTML rendering", _ => {
 				"dolor sit amet");
 
 		render(el, html => {
-			assert.equal(html, '<body class="foo">lorem ipsumdolor sit amet</body>');
+			assertSame(html, '<body class="foo">lorem ipsumdolor sit amet</body>');
 			done();
 		});
 	});
@@ -37,7 +38,7 @@ describe("HTML elements", function() {
 						h("baz", null, "lorem", "ipsum")));
 
 		render(el, html => {
-			assert.equal(html, "<foo><bar><baz>loremipsum</baz></bar></foo>");
+			assertSame(html, "<foo><bar><baz>loremipsum</baz></bar></foo>");
 			done();
 		});
 	});
@@ -46,7 +47,7 @@ describe("HTML elements", function() {
 		let el = h("custom-element");
 
 		render(el, html => {
-			assert.equal(html, "<custom-element></custom-element>");
+			assertSame(html, "<custom-element></custom-element>");
 			done();
 		});
 	});
@@ -57,7 +58,7 @@ describe("HTML elements", function() {
 				h("span", null, "ipsum"));
 
 		render(el, html => {
-			assert.equal(html, "<span>lorem</span><span>ipsum</span>");
+			assertSame(html, "<span>lorem</span><span>ipsum</span>");
 			done();
 		});
 	});
@@ -66,7 +67,7 @@ describe("HTML elements", function() {
 		let el = h("input");
 
 		render(el, html => {
-			assert.equal(html, "<input>");
+			assertSame(html, "<input>");
 			done();
 		});
 	});
@@ -84,7 +85,7 @@ describe("HTML elements", function() {
 				substr: "void elements must not have children"
 			}]);
 
-			assert.equal(html, "<div><p><input><span>lipsum</span></p></div>");
+			assertSame(html, "<div><p><input><span>lipsum</span></p></div>");
 
 			done();
 		});
@@ -98,7 +99,7 @@ describe("HTML elements", function() {
 				123);
 
 		render(el, html => {
-			assert.equal(html, "<p><em>hello</em>lorem ipsum<mark>world</mark>123</p>");
+			assertSame(html, "<p><em>hello</em>lorem ipsum<mark>world</mark>123</p>");
 			done();
 		});
 	});
@@ -107,7 +108,7 @@ describe("HTML elements", function() {
 		let el = h("p", null, null, "hello", undefined, "world", false);
 
 		render(el, html => {
-			assert.equal(html, "<p>helloworld</p>");
+			assertSame(html, "<p>helloworld</p>");
 			done();
 		});
 	});
@@ -116,7 +117,7 @@ describe("HTML elements", function() {
 		let el = h("p", null, "foo", ["hello", ["…", "…"], "world"], "bar");
 
 		render(el, html => {
-			assert.equal(html, "<p>foohello……worldbar</p>");
+			assertSame(html, "<p>foohello……worldbar</p>");
 			done();
 		});
 	});
@@ -130,7 +131,7 @@ describe("HTML elements", function() {
 				"dolor sit amet");
 
 		render(el, html => {
-			assert.equal(html,
+			assertSame(html,
 					"<div>lorem ipsum<i>foo</i><i>bar</i><i>baz</i>dolor sit amet</div>");
 			done();
 		});
@@ -148,7 +149,7 @@ describe("HTML elements", function() {
 						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html,
+			assertSame(html,
 					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
@@ -168,7 +169,7 @@ describe("HTML elements", function() {
 						h("span", null, "bar")));
 
 		render(el, html => {
-			assert.equal(html,
+			assertSame(html,
 					"<div><p><span>foo</span><em>lipsum</em><span>bar</span></p></div>");
 			done();
 		});
@@ -231,7 +232,7 @@ describe("HTML attributes", _ => {
 		});
 
 		render(el, html => {
-			assert.equal(html, '<input type="text" id="123" autofocus>');
+			assertSame(html, '<input type="text" id="123" autofocus>');
 			done();
 		});
 	});
@@ -291,7 +292,7 @@ describe("HTML attributes", _ => {
 				substr: "duplicate HTML element ID"
 			}]);
 
-			assert.equal(html, '<div id="foo"><span id="foo"></span></div>');
+			assertSame(html, '<div id="foo"><span id="foo"></span></div>');
 
 			done();
 		});
@@ -316,7 +317,7 @@ describe("HTML encoding", _ => {
 		assert.throws(_ => new HTMLString(null), /invalid/);
 		assert.throws(_ => new HTMLString(false), /invalid/);
 		assert.throws(_ => new HTMLString({}), /invalid/);
-		assert.equal((new HTMLString("")).value, "");
+		assertSame((new HTMLString("")).value, "");
 
 		let el = h("p", null, new HTMLString("foo <i>bar</i> baz"));
 
@@ -328,14 +329,14 @@ describe("HTML encoding", _ => {
 });
 
 function assertLog(actual, expected) {
-	assert.equal(actual.length, expected.length);
+	assertSame(actual.length, expected.length);
 	actual.forEach((msg, i) => {
 		let { level, substr } = expected[i];
 		if(!substr.pop) {
 			substr = [substr];
 		}
 
-		assert.equal(msg.level, level, `unexpected log-entry level: ${msg.level}`);
+		assertSame(msg.level, level, `unexpected log-entry level: ${msg.level}`);
 		substr.forEach(str => {
 			assert(msg.message.includes(str), `missing log entry: "${str}"`);
 		});

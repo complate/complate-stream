@@ -2,12 +2,14 @@
 import { awaitAll, flatCompact } from "../src/util";
 import assert from "assert";
 
+let assertSame = assert.strictEqual;
+
 describe("`awaitAll`", _ => {
 	it("should invoke callback only after the specified number of invocations", done => {
 		let count = 0;
 
 		let fn = awaitAll(3, _ => {
-			assert.equal(count, 3);
+			assertSame(count, 3);
 			done();
 		});
 

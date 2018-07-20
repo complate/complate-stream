@@ -6,12 +6,14 @@ import Renderer, { createElement } from "../src/renderer";
 import BufferedStream from "../src/buffered-stream";
 import assert from "assert";
 
+let assertSame = assert.strictEqual;
+
 describe("renderer", _ => {
 	it("should generate a render function for streaming HTML documents", done => {
 		let { renderView, stream } = setup(); // renderer defaults to HTML5
 
 		renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
-			assert.equal(stream.read(), "<!DOCTYPE html>\n<html></html>");
+			assertSame(stream.read(), "<!DOCTYPE html>\n<html></html>");
 			done();
 		});
 	});
@@ -20,7 +22,7 @@ describe("renderer", _ => {
 		let { renderView, stream } = setup({ doctype: "<!DOCTYPE … XHTML …>" });
 
 		renderView(HTMLRoot, null, stream, { fragment: false }, _ => {
-			assert.equal(stream.read(), "<!DOCTYPE … XHTML …>\n<html></html>");
+			assertSame(stream.read(), "<!DOCTYPE … XHTML …>\n<html></html>");
 			done();
 		});
 	});
@@ -29,7 +31,7 @@ describe("renderer", _ => {
 		let { renderView, stream } = setup();
 
 		renderView(HTMLRoot, null, stream, { fragment: true }, _ => {
-			assert.equal(stream.read(), "<html></html>");
+			assertSame(stream.read(), "<html></html>");
 			done();
 		});
 	});
@@ -44,7 +46,7 @@ describe("renderer", _ => {
 					createElement("li", null, "baz"));
 		};
 		renderView(view, null, stream, { fragment: true }, _ => {
-			assert.equal(stream.read(), "<li>foo</li><li>bar</li><li>baz</li>");
+			assertSame(stream.read(), "<li>foo</li><li>bar</li><li>baz</li>");
 			done();
 		});
 	});
@@ -53,7 +55,7 @@ describe("renderer", _ => {
 		let { renderView, stream } = setup();
 
 		renderView(BlockingContainer, null, stream, { fragment: true });
-		assert.equal(stream.read(),
+		assertSame(stream.read(),
 				"<div><p>…</p><p><i>lorem<em>…</em>ipsum</i></p><p>…</p></div>");
 		done();
 	});
@@ -62,7 +64,7 @@ describe("renderer", _ => {
 		let { renderView, stream } = setup();
 
 		renderView(NonBlockingContainer, null, stream, { fragment: true }, _ => {
-			assert.equal(stream.read(),
+			assertSame(stream.read(),
 					"<div><p>…</p><p><i>lorem ipsum</i></p><p>…</p></div>");
 			done();
 		});
@@ -82,7 +84,7 @@ describe("renderer", _ => {
 		/* eslint-disable indent */
 		renderView(SiteIndex, { title: "hello world" }, stream,
 				{ fragment: true }, _ => {
-			assert.equal(stream.read(), "<html>" +
+			assertSame(stream.read(), "<html>" +
 					'<head><meta charset="utf-8"><title>hello world</title></head>' +
 					"<body><h1>hello world</h1><p>…</p></body>" +
 					"</html>");
@@ -98,7 +100,7 @@ describe("renderer", _ => {
 		/* eslint-disable indent */
 		renderView("SiteIndex", { title: "hello world" }, stream,
 				{ fragment: true }, _ => {
-			assert.equal(stream.read(), "<html>" +
+			assertSame(stream.read(), "<html>" +
 					'<head><meta charset="utf-8"><title>hello world</title></head>' +
 					"<body><h1>hello world</h1><p>…</p></body>" +
 					"</html>");
@@ -120,18 +122,18 @@ describe("renderer", _ => {
 		let { renderView, stream } = setup({ log: logger.log });
 
 		renderView(InvalidElement, null, stream, {}, _ => {
-			assert.equal(stream.read(), "<!DOCTYPE html>\n<div></div>");
+			assertSame(stream.read(), "<!DOCTYPE html>\n<div></div>");
 
 			let messages = logger.all;
-			assert.equal(messages.length, 2);
+			assertSame(messages.length, 2);
 
 			let msg = messages[0];
-			assert.equal(msg.level, "error");
+			assertSame(msg.level, "error");
 			assert(msg.message.startsWith("<InvalidElement> "));
 			assert(msg.message.includes("invalid HTML attribute name"));
 
 			msg = messages[1];
-			assert.equal(msg.level, "error");
+			assertSame(msg.level, "error");
 			assert(msg.message.startsWith("<InvalidElement> "));
 			assert(msg.message.includes("invalid value for HTML attribute"));
 
