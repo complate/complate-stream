@@ -40,7 +40,8 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 //
 // without a thunk-style indirection, `<h1>` would be created before `<body>`
 export default function generateHTML(tag, params, ...children) {
-	return (stream, { nonBlocking, log = simpleLog, _idRegistry = {} }, callback) => {
+	return (stream, options, callback) => {
+		let { nonBlocking, log = simpleLog, _idRegistry = {} } = options || {};
 		if(tag !== Fragment) {
 			let attribs = generateAttributes(params, { tag, log, _idRegistry });
 			stream.write(`<${tag}${attribs}>`);
