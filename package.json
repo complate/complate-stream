@@ -25,7 +25,7 @@
 		"eslint-config-fnd": "^1.6.0",
 		"esm": "^3.0.84",
 		"faucet-pipeline-jsx": "~1.1.0",
-		"mocha": "^5.2.0",
+		"mocha": "^6.0.0",
 		"npm-run-all": "^4.1.4",
 		"release-util-fnd": "^1.1.1"
 	}
