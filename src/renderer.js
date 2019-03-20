@@ -3,6 +3,10 @@ import { flatCompact, noop } from "./util";
 
 // distinguishes macros from regular tags
 export function createElement(element, params, ...children) {
+	if(element === undefined) {
+		// TODO; provide context by stringifying `params` + `children` via `generateHTML`
+		throw new Error("invalid macro: `undefined`");
+	}
 	/* eslint-disable indent */
 	return element.call ?
 			element(params === null ? {} : params, ...flatCompact(children)) :
