@@ -1,6 +1,6 @@
 {
 	"name": "complate-stream",
-	"version": "0.16.6",
+	"version": "0.16.7",
 	"description": "complate's core library for server-side rendering via JSX",
 	"author": "FND",
 	"license": "Apache-2.0",
@@ -23,7 +23,7 @@
 	"dependencies": {},
 	"devDependencies": {
 		"eslint-config-fnd": "^1.6.0",
-		"esm": "^3.2.18",
+		"esm": "^3.2.20",
 		"faucet-pipeline-jsx": "~2.0.1",
 		"mocha": "^6.0.2",
 		"npm-run-all": "^4.1.5",

@@ -1,5 +1,5 @@
-import generateHTML from "./html";
-import { flatCompact, noop } from "./util";
+import generateHTML, { Fragment } from "./html";
+import { flatCompact, blank, noop } from "./util";
 
 // distinguishes macros from regular tags
 export function createElement(element, params, ...children) {
@@ -75,6 +75,10 @@ export default class Renderer {
 				`<${viewName || macro.name}> ${message}`));
 
 		let element = createElement(macro, params);
+		if(blank(element)) {
+			element = createElement(Fragment);
+		}
+
 		if(callback) { // non-blocking mode
 			element(stream, { nonBlocking: true, log }, callback);
 		} else { // blocking mode

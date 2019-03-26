@@ -51,6 +51,17 @@ describe("renderer", _ => {
 		});
 	});
 
+	it("should support blank views", done => {
+		let { renderView, stream } = setup();
+
+		let BlankView = () => false;
+
+		renderView(BlankView, null, stream, { fragment: true }, _ => {
+			assertSame(stream.read(), "");
+			done();
+		});
+	});
+
 	it("should support blocking mode", done => {
 		let { renderView, stream } = setup();
 
