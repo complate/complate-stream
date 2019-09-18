@@ -1,7 +1,7 @@
 complate-stream
 ===============
 
-[complate](https://complate.org)'s core library for rendering HTML
+[complate](https://complate.github.io)'s core library for rendering HTML
 
 [![package version](https://img.shields.io/npm/v/complate-stream.svg?style=flat)](https://www.npmjs.com/package/complate-stream)
 [![build status](https://travis-ci.org/complate/complate-stream.svg?branch=master)](https://travis-ci.org/complate/complate-stream)
