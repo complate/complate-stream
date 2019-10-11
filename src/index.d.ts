@@ -54,7 +54,7 @@ declare function safe(str: string): Renderer.HTMLString;
 declare function htmlEncode(str: string, attribute: boolean): string;
 
 declare class Renderer {
-	constructor(RendererOptions?);
+	constructor(options?: RendererOptions);
 
 	renderView(
 		view: elementGenerator | string,
