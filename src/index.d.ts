@@ -24,6 +24,15 @@ interface StatelessFunctionalComponent<T> {
 	(props: T): elementGenerator;
 }
 
+declare interface RendererOptions {
+	doctype?: string;
+	log?: Logger;
+}
+
+declare interface Logger {
+	(level: string, message: string): void;
+}
+
 // ** Exports
 
 declare const Fragment;
@@ -45,7 +54,7 @@ declare function safe(str: string): Renderer.HTMLString;
 declare function htmlEncode(str: string, attribute: boolean): string;
 
 declare class Renderer {
-	constructor(doctype?: string);
+	constructor(RendererOptions?);
 
 	renderView(
 		view: elementGenerator | string,
