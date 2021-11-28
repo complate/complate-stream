@@ -80,14 +80,24 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
-// adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
+const HTML_ENCODE_REPLACE = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&quot;",
+	"'": "&#x27;"
+};
+
 export function htmlEncode(str, attribute) {
-	let res = str.replace(/&/g, "&amp;").
-		replace(/</g, "&lt;").
-		replace(/>/g, "&gt;");
-	if(attribute) {
-		res = res.replace(/"/g, "&quot;").
-			replace(/'/g, "&#x27;");
+	const rx = attribute ? /[&<>'"]/g : /[&<>]/g;
+	let res;
+	// fast path for strings which don't need to be encoded
+	if(rx.test(str)) {
+		// reset index because test don't reset index (see https://mzl.la/3FVasRL)
+		rx.lastIndex = 0;
+		res = str.replace(rx, c => HTML_ENCODE_REPLACE[c]);
+	} else {
+		res = str;
 	}
 	return res;
 }
