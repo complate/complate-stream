@@ -193,7 +193,7 @@ function generateAttributes(params, { tag, log, _idRegistry }) {
 		// regular attributes
 		default:
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
-			if(/ |"|'|>|'|\/|=/.test(name)) {
+			if(/[ "'>/=]/.test(name)) {
 				reportAttribError(`invalid HTML attribute name: ${repr(name)}`, tag, log);
 				break;
 			}
