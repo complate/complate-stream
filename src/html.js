@@ -88,14 +88,25 @@ const HTML_ENCODE_REPLACE = {
 	"'": "&#x27;"
 };
 
+// adapted from html-entities <https://github.com/mdevils/html-entities> (MIT LICENSE)
 export function htmlEncode(str, attribute) {
 	const rx = attribute ? /[&<>'"]/g : /[&<>]/g;
 	let res;
-	// fast path for strings which don't need to be encoded
-	if(rx.test(str)) {
-		// reset index because test don't reset index (see https://mzl.la/3FVasRL)
-		rx.lastIndex = 0;
-		res = str.replace(rx, c => HTML_ENCODE_REPLACE[c]);
+	let match = rx.exec(str);
+	if(match) {
+		res = "";
+		let lastIndex = 0;
+		do {
+			if(lastIndex !== match.index) {
+				res += str.substring(lastIndex, match.index);
+			}
+			res += HTML_ENCODE_REPLACE[match[0]];
+			lastIndex = rx.lastIndex;
+		} while((match = rx.exec(str)));
+
+		if(lastIndex !== str.length) {
+			res += str.substring(lastIndex);
+		}
 	} else {
 		res = str;
 	}
