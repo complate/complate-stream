@@ -11,6 +11,14 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 	VOID_ELEMENTS[tag] = true;
 });
 
+let HTML_ENTITIES = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&quot;",
+	"'": "&#x27;"
+};
+
 // generates an "element generator" function which serves as a placeholder and,
 // when invoked, writes the respective HTML to an output stream
 //
@@ -80,35 +88,27 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
-const HTML_ENCODE_REPLACE = {
-	"&": "&amp;",
-	"<": "&lt;",
-	">": "&gt;",
-	"\"": "&quot;",
-	"'": "&#x27;"
-};
-
-// adapted from html-entities <https://github.com/mdevils/html-entities> (MIT LICENSE)
+// adapted from html-entities <https://github.com/mdevils/html-entities> (MIT license)
 export function htmlEncode(str, attribute) {
-	const rx = attribute ? /[&<>'"]/g : /[&<>]/g;
-	let res;
-	let match = rx.exec(str);
-	if(match) {
-		res = "";
-		let lastIndex = 0;
-		do {
-			if(lastIndex !== match.index) {
-				res += str.substring(lastIndex, match.index);
-			}
-			res += HTML_ENCODE_REPLACE[match[0]];
-			lastIndex = rx.lastIndex;
-		} while((match = rx.exec(str)));
+	let pattern = attribute ? /[&<>'"]/g : /[&<>]/g;
+	let match = pattern.exec(str);
+	if(!match) {
+		return str;
+	}
 
-		if(lastIndex !== str.length) {
-			res += str.substring(lastIndex);
+	let res = "";
+	let last = 0;
+	do {
+		let { index } = match;
+		if(last !== index) {
+			res += str.substring(last, index);
 		}
-	} else {
-		res = str;
+		res += HTML_ENTITIES[match[0]];
+		last = pattern.lastIndex;
+	} while((match = pattern.exec(str)));
+
+	if(last !== str.length) {
+		res += str.substring(last);
 	}
 	return res;
 }
