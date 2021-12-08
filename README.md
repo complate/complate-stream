@@ -4,7 +4,7 @@ complate-stream
 [complate](https://complate.org)'s core library for rendering HTML
 
 [![package version](https://img.shields.io/npm/v/complate-stream.svg?style=flat)](https://www.npmjs.com/package/complate-stream)
-[![build status](https://travis-ci.org/complate/complate-stream.svg?branch=master)](https://travis-ci.org/complate/complate-stream)
+[![build status](https://github.com/complate/complate-stream/workflows/tests/badge.svg)](https://github.com/complate/complate-stream/actions)
 [![Greenkeeper badge](https://badges.greenkeeper.io/complate/complate-stream.svg)](https://greenkeeper.io)
 
 
