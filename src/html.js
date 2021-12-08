@@ -11,6 +11,14 @@ let VOID_ELEMENTS = {}; // poor man's `Set`
 	VOID_ELEMENTS[tag] = true;
 });
 
+let HTML_ENTITIES = {
+	"&": "&amp;",
+	"<": "&lt;",
+	">": "&gt;",
+	"\"": "&quot;",
+	"'": "&#x27;"
+};
+
 // generates an "element generator" function which serves as a placeholder and,
 // when invoked, writes the respective HTML to an output stream
 //
@@ -80,14 +88,27 @@ export function HTMLString(str) {
 	this.value = str;
 }
 
-// adapted from TiddlyWiki <http://tiddlywiki.com> and Python 3's `html` module
+// adapted from html-entities <https://github.com/mdevils/html-entities> (MIT license)
 export function htmlEncode(str, attribute) {
-	let res = str.replace(/&/g, "&amp;").
-		replace(/</g, "&lt;").
-		replace(/>/g, "&gt;");
-	if(attribute) {
-		res = res.replace(/"/g, "&quot;").
-			replace(/'/g, "&#x27;");
+	let pattern = attribute ? /[&<>'"]/g : /[&<>]/g;
+	let match = pattern.exec(str);
+	if(!match) {
+		return str;
+	}
+
+	let res = "";
+	let last = 0;
+	do {
+		let { index } = match;
+		if(last !== index) {
+			res += str.substring(last, index);
+		}
+		res += HTML_ENTITIES[match[0]];
+		last = pattern.lastIndex;
+	} while((match = pattern.exec(str)));
+
+	if(last !== str.length) {
+		res += str.substring(last);
 	}
 	return res;
 }
@@ -183,7 +204,7 @@ function generateAttributes(params, { tag, log, _idRegistry }) {
 		// regular attributes
 		default:
 			// cf. https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
-			if(/ |"|'|>|'|\/|=/.test(name)) {
+			if(/[ "'>/=]/.test(name)) {
 				reportAttribError(`invalid HTML attribute name: ${repr(name)}`, tag, log);
 				break;
 			}
